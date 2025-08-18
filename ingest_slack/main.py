@@ -31,11 +31,59 @@ async def list_public_channels_bot_is_in(
     return channels
 
 
+async def list_workspace_users(
+    exclude_deleted: bool = True,
+    exclude_bots: bool = True,
+) -> list[dict[str, str]]:
+    users: list[dict[str, str]] = []
+    cursor = None
+
+    while True:
+        resp = await client.users_list(limit=1000, cursor=cursor)
+        resp_data = cast(dict[str, Any], resp.data)
+        for member in resp_data.get("members", []):
+            if exclude_deleted and member.get("deleted"):
+                continue
+            if exclude_bots and (
+                member.get("is_bot")
+                or member.get("is_app_user")
+                or member.get("id") == "USLACKBOT"
+            ):
+                continue
+
+            user_id = cast(str, member.get("id"))
+            profile = cast(dict[str, Any], member.get("profile") or {})
+            display_name = cast(
+                str,
+                profile.get("display_name")
+                or profile.get("real_name")
+                or member.get("name")
+                or user_id,
+            )
+            slack_name = cast(str, member.get("name"))
+            tz = cast(str, member.get("tz"))
+            users.append(
+                {
+                    "id": user_id,
+                    "display_name": display_name,
+                    "slack_name": slack_name,
+                    "tz": tz,
+                }
+            )
+
+        cursor = resp_data.get("response_metadata", {}).get("next_cursor") or None
+        if not cursor:
+            break
+
+    return users
+
+
 async def iter_public_channel_history(
     channel_id: str,
     oldest: str | None = None,
     latest: str | None = None,
     page_size: int = 200,
+    thread_page_size: int = 200,
 ) -> AsyncIterable[dict[str, Any]]:
     cursor = None
 
@@ -48,8 +96,42 @@ async def iter_public_channel_history(
             cursor=cursor,
         )
         resp_data = cast(dict[str, Any], resp.data)
-        for m in resp_data.get("messages", []):
-            yield m
+        for message in resp_data.get("messages", []):
+            # Skip channel join messages
+            if message.get("subtype") == "channel_join":
+                continue
+
+            yield message
+
+            # Include replies from threads
+            if message.get("reply_count", 0) > 0:
+                parent_ts = cast(str, message.get("thread_ts") or message.get("ts"))
+                thread_cursor = None
+                while True:
+                    thread_response = await client.conversations_replies(
+                        channel=channel_id,
+                        ts=parent_ts,
+                        limit=thread_page_size,
+                        cursor=thread_cursor,
+                    )
+                    thread_response_data = cast(dict[str, Any], thread_response.data)
+                    for thread_message in thread_response_data.get("messages", []):
+                        # Skip the parent message (first element)
+                        skip_parent_message = thread_message.get("ts") == parent_ts
+                        if skip_parent_message:
+                            continue
+
+                        yield thread_message
+
+                    thread_cursor = (
+                        thread_response_data.get("response_metadata", {}).get(
+                            "next_cursor"
+                        )
+                        or None
+                    )
+                    if not thread_cursor:
+                        break
+
         cursor = resp_data.get("response_metadata", {}).get("next_cursor") or None
         if not cursor:
             break
@@ -57,23 +139,34 @@ async def iter_public_channel_history(
 
 async def main() -> None:
     try:
+        # Channels
         channels = await list_public_channels_bot_is_in()
         print(f"Bot is in {len(channels)} public channels:")
-        for ch in channels:
-            print(f"- {ch['name']} ({ch['id']})")
+        for channel in channels:
+            print(f"- {channel['name']} ({channel['id']})")
 
-        # Example: fetch and print the last 10 messages of each channel
-        for ch in channels:
-            print(f"\nLast messages in #{ch['name']}:")
-            last_ten: list[dict[str, Any]] = []
-            async for m in iter_public_channel_history(ch["id"], page_size=200):
-                last_ten.append(m)
-                if len(last_ten) > 10:
-                    last_ten.pop(0)
-            for m in last_ten:
+        # Users
+        users = await list_workspace_users()
+        print(f"\nWorkspace users (active, non-bot): {len(users)}")
+        for u in users:
+            print(
+                f"- <@{u['id']}> | {u['id']} | {u['slack_name']} | "
+                f"{u['display_name']} | {u['tz']}"
+            )
+
+        # Messages
+        for channel in channels:
+            print(f"\nMessages in #{channel['name']} (including thread replies):")
+            async for message in iter_public_channel_history(
+                channel["id"],
+                page_size=200,
+            ):
                 print(
-                    f"{m.get('ts')} | {m.get('user') or m.get('bot_id')} | {m.get('text')}"
+                    f"{message.get('ts')} | {message.get('thread_ts')} | "
+                    f"{message.get('user') or message.get('bot_id')} | "
+                    f"{message.get('text')}"
                 )
+
     except SlackApiError as e:
         print(f"Slack error: {e.response['error']}")
 
