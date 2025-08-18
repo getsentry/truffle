@@ -14,6 +14,7 @@ DOMAINS: list[str] = [
     "marketing",
     "sales",
     "customer_success",
+    "sentry",
 ]
 
 
@@ -507,7 +508,178 @@ BUSINESS_SKILLS: list[Skill] = [
 ]
 
 
-SKILLS: list[Skill] = ENGINEERING_SDK_SKILLS + BUSINESS_SKILLS
+SENTRY_PRODUCT_SKILLS: list[Skill] = [
+    # ai-in-sentry
+    Skill("ai_in_sentry", "AI in Sentry", "sentry", _aliases("ai-in-sentry")),
+    Skill(
+        "ai_privacy_and_security",
+        "AI Privacy and Security",
+        "sentry",
+        _aliases("ai-privacy-and-security", "ai privacy", "ai security"),
+    ),
+    Skill("seer", "Seer", "sentry", _aliases("seer")),
+    Skill(
+        "sentry_prevent_ai",
+        "Sentry Prevent AI",
+        "sentry",
+        _aliases("sentry-prevent-ai"),
+    ),
+    # alerts
+    Skill("alerts", "Alerts", "sentry", _aliases("alerts")),
+    Skill("create_alerts", "Create Alerts", "sentry", _aliases("create-alerts")),
+    Skill("notifications", "Notifications", "sentry", _aliases("notifications")),
+    # codecov
+    Skill("codecov", "Codecov", "sentry", _aliases("codecov")),
+    # crons
+    Skill("crons", "Crons", "sentry", _aliases("crons")),
+    # dashboards
+    Skill("dashboards", "Dashboards", "sentry", _aliases("dashboards")),
+    Skill(
+        "custom_dashboards",
+        "Custom Dashboards",
+        "sentry",
+        _aliases("custom-dashboards"),
+    ),
+    Skill("widget_builder", "Widget Builder", "sentry", _aliases("widget-builder")),
+    Skill("widget_library", "Widget Library", "sentry", _aliases("widget-library")),
+    # explore
+    Skill("explore", "Explore", "sentry", _aliases("explore")),
+    Skill(
+        "discover_queries", "Discover Queries", "sentry", _aliases("discover-queries")
+    ),
+    Skill("logs", "Logs", "sentry", _aliases("logs")),
+    Skill("profiling", "Profiling", "sentry", _aliases("profiling")),
+    Skill("session_replay", "Session Replay", "sentry", _aliases("session-replay")),
+    Skill("trace_explorer", "Trace Explorer", "sentry", _aliases("trace-explorer")),
+    # insights
+    Skill("insights", "Insights", "sentry", _aliases("insights")),
+    Skill("insights_ai", "Insights - AI", "sentry", _aliases("insights ai")),
+    Skill(
+        "insights_backend", "Insights - Backend", "sentry", _aliases("insights backend")
+    ),
+    Skill(
+        "insights_frontend",
+        "Insights - Frontend",
+        "sentry",
+        _aliases("insights frontend"),
+    ),
+    Skill(
+        "insights_mobile", "Insights - Mobile", "sentry", _aliases("insights mobile")
+    ),
+    Skill(
+        "insights_overview",
+        "Insights - Overview",
+        "sentry",
+        _aliases("insights overview"),
+    ),
+    Skill(
+        "insights_getting_started",
+        "Insights - Getting Started",
+        "sentry",
+        _aliases("getting-started.mdx", "insights getting started"),
+    ),
+    Skill(
+        "performance_overhead",
+        "Performance Overhead",
+        "sentry",
+        _aliases("performance-overhead.mdx", "performance overhead"),
+    ),
+    # issues
+    Skill("issues", "Issues", "sentry", _aliases("issues")),
+    Skill(
+        "grouping_and_fingerprints",
+        "Grouping and Fingerprints",
+        "sentry",
+        _aliases("grouping-and-fingerprints"),
+    ),
+    Skill("issue_details", "Issue Details", "sentry", _aliases("issue-details")),
+    Skill("issue_priority", "Issue Priority", "sentry", _aliases("issue-priority")),
+    Skill("issue_views", "Issue Views", "sentry", _aliases("issue-views")),
+    Skill("ownership_rules", "Ownership Rules", "sentry", _aliases("ownership-rules")),
+    Skill("reprocessing", "Reprocessing", "sentry", _aliases("reprocessing")),
+    Skill("states_triage", "States & Triage", "sentry", _aliases("states-triage")),
+    Skill("suspect_commits", "Suspect Commits", "sentry", _aliases("suspect-commits")),
+    # onboarding
+    Skill("onboarding_sentry", "Onboarding (Sentry)", "sentry", _aliases("onboarding")),
+    # partnership-platform
+    Skill(
+        "partnership_platform",
+        "Partnership Platform",
+        "sentry",
+        _aliases("partnership-platform"),
+    ),
+    Skill(
+        "account_provisioning_api",
+        "Account Provisioning API",
+        "sentry",
+        _aliases("account-provisioning-api"),
+    ),
+    # projects
+    Skill("projects", "Projects", "sentry", _aliases("projects")),
+    Skill("project_details", "Project Details", "sentry", _aliases("project-details")),
+    # relay
+    Skill("relay", "Relay", "sentry", _aliases("relay")),
+    # releases
+    Skill("releases", "Releases", "sentry", _aliases("releases")),
+    Skill(
+        "associate_commits",
+        "Associate Commits",
+        "sentry",
+        _aliases("associate-commits"),
+    ),
+    Skill(
+        "release_health",
+        "Release Health",
+        "sentry",
+        _aliases("health", "release health"),
+    ),
+    # sentry-basics
+    Skill("sentry_basics", "Sentry Basics", "sentry", _aliases("sentry-basics")),
+    Skill(
+        "distributed_tracing",
+        "Distributed Tracing",
+        "sentry",
+        _aliases("distributed-tracing"),
+    ),
+    # sentry-mcp
+    Skill("sentry_mcp", "Sentry MCP", "sentry", _aliases("sentry-mcp")),
+    # sentry-toolbar
+    Skill("sentry_toolbar", "Sentry Toolbar", "sentry", _aliases("sentry-toolbar")),
+    # stats
+    Skill("stats", "Stats", "sentry", _aliases("stats")),
+    # uptime-monitoring
+    Skill(
+        "uptime_monitoring",
+        "Uptime Monitoring",
+        "sentry",
+        _aliases("uptime-monitoring", "uptime monitoring"),
+    ),
+    # user-feedback
+    Skill(
+        "user_feedback",
+        "User Feedback",
+        "sentry",
+        _aliases("user-feedback", "user feedback"),
+    ),
+    # security-legal-pii
+    Skill(
+        "security_legal_pii",
+        "Security, Legal & PII",
+        "sentry",
+        _aliases("security-legal-pii"),
+    ),
+    Skill(
+        "pii",
+        "PII (Personal Identifiable Information)",
+        "sentry",
+        _aliases("pii", "personal identifiable information"),
+    ),
+    Skill("scrubbing", "Data Scrubbing", "sentry", _aliases("scrubbing")),
+    Skill("security", "Security", "sentry", _aliases("security")),
+]
+
+
+SKILLS: list[Skill] = ENGINEERING_SDK_SKILLS + BUSINESS_SKILLS + SENTRY_PRODUCT_SKILLS
 
 
 class SkillMatcher:
