@@ -4,6 +4,9 @@ import re
 from collections.abc import AsyncIterable
 from typing import Any, cast
 
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
+
 try:
     from ingest_slack.taxonomy import SkillMatcher  # type: ignore
 except Exception:
@@ -13,23 +16,25 @@ except Exception:
         SkillMatcher = None  # type: ignore
 
 try:
-    from ingest_slack.classifier import MessageCandidate  # type: ignore
-    from ingest_slack.classifier import classify_messages
+    import ingest_slack.classifier as classifier_mod  # type: ignore
 except Exception:
     try:
-        from classifier import MessageCandidate  # type: ignore
-        from classifier import classify_messages
+        import classifier as classifier_mod  # type: ignore
     except Exception:
-        MessageCandidate = None  # type: ignore
-        classify_messages = None  # type: ignore
+        classifier_mod = None  # type: ignore
 
-from slack_sdk.errors import SlackApiError
-from slack_sdk.web.async_client import AsyncWebClient
+if classifier_mod is not None:
+    MessageCandidate = classifier_mod.MessageCandidate  # type: ignore[attr-defined]
+    classify_messages = classifier_mod.classify_messages  # type: ignore[attr-defined]
+else:  # pragma: no cover
+    MessageCandidate = None  # type: ignore[assignment]
+    classify_messages = None  # type: ignore[assignment]
+
+EXTRACT_SKILLS = os.environ.get("EXTRACT_SKILLS") == "1"
+CLASSIFY_EXPERTISE = os.environ.get("CLASSIFY_EXPERTISE") == "1"
 
 client = AsyncWebClient(token=os.environ["SLACK_BOT_AUTH_TOKEN"])
-EXTRACT_SKILLS = os.environ.get("EXTRACT_SKILLS") == "1"
 matcher: Any = SkillMatcher() if (EXTRACT_SKILLS and SkillMatcher is not None) else None
-CLASSIFY_EXPERTISE = os.environ.get("CLASSIFY_EXPERTISE") == "1"
 
 
 async def list_public_channels_bot_is_in(
