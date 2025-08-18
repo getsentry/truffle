@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 from collections.abc import AsyncIterable
 from typing import Any, cast
 
@@ -146,6 +147,7 @@ async def main() -> None:
             print(f"- {channel['name']} ({channel['id']})")
 
         # Users
+        user_dict = {}
         users = await list_workspace_users()
         print(f"\nWorkspace users (active, non-bot): {len(users)}")
         for u in users:
@@ -153,6 +155,7 @@ async def main() -> None:
                 f"- <@{u['id']}> | {u['id']} | {u['slack_name']} | "
                 f"{u['display_name']} | {u['tz']}"
             )
+            user_dict[u["id"]] = u
 
         # Messages
         for channel in channels:
@@ -161,6 +164,18 @@ async def main() -> None:
                 channel["id"],
                 page_size=200,
             ):
+                # Extract mentioned user ids and replace them by names and id
+                user_ids = re.findall(
+                    r"<@([A-Z0-9]+)(?:\|[^>]+)?>", message.get("text", "")
+                )
+                for user_id in user_ids:
+                    user = user_dict.get(user_id)
+                    if user:
+                        message["text"] = message["text"].replace(
+                            f"<@{user_id}>",
+                            f"@{user['slack_name']} (User ID: {user_id})",
+                        )
+
                 print(
                     f"{message.get('ts')} | {message.get('thread_ts')} | "
                     f"{message.get('user') or message.get('bot_id')} | "
