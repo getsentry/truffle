@@ -9,6 +9,7 @@ dependencies = [
     "pudb>=2025.1",
     "ruff>=0.12.9",
     "slack-sdk>=3.36.0",
+    "openai>=1.40.0",
 ]
 
 [tool.ruff]

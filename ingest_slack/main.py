@@ -12,12 +12,24 @@ except Exception:
     except Exception:
         SkillMatcher = None  # type: ignore
 
+try:
+    from ingest_slack.classifier import MessageCandidate  # type: ignore
+    from ingest_slack.classifier import classify_messages
+except Exception:
+    try:
+        from classifier import MessageCandidate  # type: ignore
+        from classifier import classify_messages
+    except Exception:
+        MessageCandidate = None  # type: ignore
+        classify_messages = None  # type: ignore
+
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 client = AsyncWebClient(token=os.environ["SLACK_BOT_AUTH_TOKEN"])
 EXTRACT_SKILLS = os.environ.get("EXTRACT_SKILLS") == "1"
 matcher: Any = SkillMatcher() if (EXTRACT_SKILLS and SkillMatcher is not None) else None
+CLASSIFY_EXPERTISE = os.environ.get("CLASSIFY_EXPERTISE") == "1"
 
 
 async def list_public_channels_bot_is_in(
@@ -215,6 +227,32 @@ async def main() -> None:
                         ]
                         if names:
                             print(f"    -> skills: {', '.join(names)}")
+
+                        if (
+                            CLASSIFY_EXPERTISE
+                            and classify_messages is not None
+                            and MessageCandidate is not None
+                        ):
+                            candidate = MessageCandidate(
+                                message_id=f"{channel['id']}:{message.get('ts')}",
+                                author_id=cast(str, message.get("user") or ""),
+                                channel_id=channel["id"],
+                                text=text_value,
+                                parent_text=None,
+                                skill_keys=tuple(matched_keys),
+                            )
+                            try:
+                                evals = classify_messages([candidate])
+                                if evals and evals[0].results:
+                                    pretty = ", ".join(
+                                        f"{r.skill_key}:{r.label}@{r.confidence:.2f}"
+                                        for r in evals[0].results
+                                    )
+                                    print(f"    -> expertise: {pretty}")
+                            except Exception as cls_err:
+                                print(
+                                    f"    -> expertise classification error: {cls_err}"
+                                )
 
     except SlackApiError as e:
         print(f"Slack error: {e.response['error']}")
