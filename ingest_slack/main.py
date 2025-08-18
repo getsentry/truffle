@@ -25,11 +25,36 @@ async def list_public_channels_bot_is_in(
         )
         resp_data = cast(dict[str, Any], resp.data)
         channels.extend(resp_data.get("channels", []))
+
         cursor = resp_data.get("response_metadata", {}).get("next_cursor") or None
         if not cursor:
             break
 
     return channels
+
+
+def _normalize_user(member: dict[str, Any]) -> dict[str, Any]:
+    user_id = cast(str, member.get("id"))
+    profile = cast(dict[str, Any], member.get("profile") or {})
+    display_name = cast(
+        str,
+        profile.get("display_name")
+        or profile.get("real_name")
+        or member.get("name")
+        or user_id,
+    )
+    slack_name = cast(str, member.get("name"))
+    tz = cast(str, member.get("tz"))
+
+    normalized_user = {
+        "id": user_id,
+        "display_name": display_name,
+        "slack_name": slack_name,
+        "tz": tz,
+        "raw_data": member,
+    }
+
+    return normalized_user
 
 
 async def list_workspace_users(
@@ -42,6 +67,7 @@ async def list_workspace_users(
     while True:
         resp = await client.users_list(limit=1000, cursor=cursor)
         resp_data = cast(dict[str, Any], resp.data)
+
         for member in resp_data.get("members", []):
             if exclude_deleted and member.get("deleted"):
                 continue
@@ -52,26 +78,7 @@ async def list_workspace_users(
             ):
                 continue
 
-            user_id = cast(str, member.get("id"))
-            profile = cast(dict[str, Any], member.get("profile") or {})
-            display_name = cast(
-                str,
-                profile.get("display_name")
-                or profile.get("real_name")
-                or member.get("name")
-                or user_id,
-            )
-            slack_name = cast(str, member.get("name"))
-            tz = cast(str, member.get("tz"))
-            users.append(
-                {
-                    "id": user_id,
-                    "display_name": display_name,
-                    "slack_name": slack_name,
-                    "tz": tz,
-                    "raw_data": member,
-                }
-            )
+            users.append(_normalize_user(member))
 
         cursor = resp_data.get("response_metadata", {}).get("next_cursor") or None
         if not cursor:
@@ -151,16 +158,13 @@ async def main() -> None:
         user_dict = {}
         users = await list_workspace_users()
         print(f"\nWorkspace users (active, non-bot): {len(users)}")
-        for u in users:
+        for user in users:
             print(
-                f"- <@{u['id']}> | {u['id']} | {u['slack_name']} | "
-                f"{u['display_name']} | {u['tz']}"
+                f"- <@{user['id']}> | {user['id']} | {user['slack_name']} | "
+                f"{user['display_name']} | {user['tz']}"
             )
-            user_dict[u["id"]] = u
+            user_dict[user["id"]] = user
 
-        import ipdb
-
-        ipdb.set_trace()
         # Messages
         for channel in channels:
             print(f"\nMessages in #{channel['name']} (including thread replies):")
@@ -173,11 +177,11 @@ async def main() -> None:
                     r"<@([A-Z0-9]+)(?:\|[^>]+)?>", message.get("text", "")
                 )
                 for user_id in user_ids:
-                    user = user_dict.get(user_id)
-                    if user:
+                    existing_user: dict[str, Any] | None = user_dict.get(user_id)
+                    if existing_user:
                         message["text"] = message["text"].replace(
                             f"<@{user_id}>",
-                            f"@{user['slack_name']} (User ID: {user_id})",
+                            f"@{existing_user['slack_name']}[slack_user_id:{user_id}]",
                         )
 
                 print(
