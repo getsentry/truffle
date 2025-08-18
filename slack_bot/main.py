@@ -21,9 +21,10 @@ def health() -> HealthResponse:
 
 @app.post("/slack/events", response_model=SlackEventsResponse)
 async def slack_events(payload: SlackEventsRequest):
-    # Handle Slack URL verification challenge
     print("slack_events:")
     print(payload)
+
+    # Handle Slack URL verification challenge
     if payload.type == "url_verification" and payload.challenge:
         return PlainTextResponse(payload.challenge)
 
