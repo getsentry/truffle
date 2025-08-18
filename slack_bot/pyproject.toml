@@ -5,9 +5,10 @@ requires-python = ">=3.13"
 
 dependencies = [
     "fastapi>=0.111.0",
-    "uvicorn[standard]>=0.30.0",
     "ipdb>=0.13.13",
+    "pudb>=2025.1",
     "ruff>=0.12.9",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [tool.ruff]

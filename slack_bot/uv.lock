@@ -190,6 +190,15 @@ wheels = [
 ]
 
 [[package]]
+name = "packaging"
+version = "25.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b96ca8f8c3ba19e6a61c8253c72794544580a7b6c24d/packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f", size = 165727 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469 },
+]
+
+[[package]]
 name = "parso"
 version = "0.8.4"
 source = { registry = "https://pypi.org/simple" }
@@ -229,6 +238,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/20/e5/16ff212c1e452235a90aeb09066144d0c5a6a8c0834397e03f5224495c4e/ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220", size = 70762 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/22/a6/858897256d0deac81a172289110f31629fc4cee19b6f01283303e18c8db3/ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35", size = 13993 },
+]
+
+[[package]]
+name = "pudb"
+version = "2025.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jedi" },
+    { name = "packaging" },
+    { name = "pygments" },
+    { name = "urwid" },
+    { name = "urwid-readline" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/93/40/8d17b16a1c2a36d8cc1befb5eda13310ad20fcb347e58bef5e104696e14a/pudb-2025.1.tar.gz", hash = "sha256:a528b29c69ce8b182a337872c5f046071f6d68d3415c6d7bf53bd27c264f58d0", size = 220623 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/01/069766294390d3e10c77dfb553171466d67ffb51bf72a437650c0a5db86a/pudb-2025.1-py3-none-any.whl", hash = "sha256:f642d42e6054c992b43c463742650aa879fe290d7d7ffdeb21f7d00dc4587a21", size = 89208 },
 ]
 
 [[package]]
@@ -351,6 +376,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "ipdb" },
+    { name = "pudb" },
     { name = "ruff" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -359,6 +385,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "ipdb", specifier = ">=0.13.13" },
+    { name = "pudb", specifier = ">=2025.1" },
     { name = "ruff", specifier = ">=0.12.9" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30.0" },
 ]
@@ -427,6 +454,27 @@ sdist = { url = "https://files.pythonhosted.org/packages/f8/b1/0c11f5058406b3af7
 wheels = [
     { url = "https://files.pythonhosted.org/packages/17/69/cd203477f944c353c31bade965f880aa1061fd6bf05ded0726ca845b6ff7/typing_inspection-0.4.1-py3-none-any.whl", hash = "sha256:389055682238f53b04f7badcb49b989835495a96700ced5dab2d8feae4b26f51", size = 14552 },
 ]
+
+[[package]]
+name = "urwid"
+version = "3.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wcwidth" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/2d/71550379ed6b34968e14f73b0cf8574dee160acb6b820a066ab238ef2d4f/urwid-3.0.2.tar.gz", hash = "sha256:e7cb70ba1e7ff45779a5a57e43c57581ee7de6ceefb56c432491a4a6ce81eb78", size = 855353 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b5/ee/2956918f14fd6e4310f7200108b53917f4da713d74c7ccd0d91a2e3a4f18/urwid-3.0.2-py3-none-any.whl", hash = "sha256:94ec1448d0178c881c01845c2b478cdc89f7b71bb65349466dbc99da1965eaac", size = 295994 },
+]
+
+[[package]]
+name = "urwid-readline"
+version = "0.15.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urwid" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ad/70/be318554495555eba7d8ff6e489f6f74ddb225b24086ba4af62a82e723fd/urwid_readline-0.15.1.tar.gz", hash = "sha256:9301444b86d58f7d26388506b704f142cefd193888488b4070d3a0fdfcfc0f84", size = 9007 }
 
 [[package]]
 name = "uvicorn"
