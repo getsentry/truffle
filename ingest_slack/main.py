@@ -4,10 +4,20 @@ import re
 from collections.abc import AsyncIterable
 from typing import Any, cast
 
+try:
+    from ingest_slack.taxonomy import SkillMatcher  # type: ignore
+except Exception:
+    try:
+        from taxonomy import SkillMatcher  # type: ignore
+    except Exception:
+        SkillMatcher = None  # type: ignore
+
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 client = AsyncWebClient(token=os.environ["SLACK_BOT_AUTH_TOKEN"])
+EXTRACT_SKILLS = os.environ.get("EXTRACT_SKILLS") == "1"
+matcher: Any = SkillMatcher() if (EXTRACT_SKILLS and SkillMatcher is not None) else None
 
 
 async def list_public_channels_bot_is_in(
@@ -193,6 +203,18 @@ async def main() -> None:
                     f"{message.get('user') or message.get('bot_id')} | "
                     f"{message.get('text')}"
                 )
+
+                if EXTRACT_SKILLS and matcher is not None:
+                    text_value = cast(str, message.get("text") or "")
+                    matched_keys = matcher.match_text(text_value)
+                    if matched_keys:
+                        names = [
+                            matcher.describe(k).name
+                            for k in matched_keys
+                            if matcher.describe(k)
+                        ]
+                        if names:
+                            print(f"    -> skills: {', '.join(names)}")
 
     except SlackApiError as e:
         print(f"Slack error: {e.response['error']}")
