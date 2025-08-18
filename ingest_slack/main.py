@@ -151,16 +151,18 @@ async def main() -> None:
         # Channels
         channels = await list_public_channels_bot_is_in()
         print(f"Bot is in {len(channels)} public channels:")
+        print("  channel_id | channel_name")
         for channel in channels:
-            print(f"- {channel['name']} ({channel['id']})")
+            print(f"  {channel['id']} | {channel['name']}")
 
         # Users
         user_dict = {}
         users = await list_workspace_users()
         print(f"\nWorkspace users (active, non-bot): {len(users)}")
+        print("  user_id | slack_name | display_name | tz")
         for user in users:
             print(
-                f"- <@{user['id']}> | {user['id']} | {user['slack_name']} | "
+                f"  {user['id']} | {user['slack_name']} | "
                 f"{user['display_name']} | {user['tz']}"
             )
             user_dict[user["id"]] = user
@@ -168,6 +170,8 @@ async def main() -> None:
         # Messages
         for channel in channels:
             print(f"\nMessages in #{channel['name']} (including thread replies):")
+            print("  ts | thread_ts | user_id | text")
+
             async for message in iter_public_channel_history(
                 channel["id"],
                 page_size=200,
@@ -185,7 +189,7 @@ async def main() -> None:
                         )
 
                 print(
-                    f"{message.get('ts')} | {message.get('thread_ts')} | "
+                    f"  {message.get('ts')} | {message.get('thread_ts')} | "
                     f"{message.get('user') or message.get('bot_id')} | "
                     f"{message.get('text')}"
                 )
