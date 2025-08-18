@@ -194,6 +194,9 @@ async def main() -> None:
             print(f"\nMessages in #{channel['name']} (including thread replies):")
             print("  ts | thread_ts | user_id | text")
 
+            # Maintain minimal thread context so replies can inherit parent skills
+            thread_context: dict[str, dict[str, Any]] = {}
+
             async for message in iter_public_channel_history(
                 channel["id"],
                 page_size=200,
@@ -219,10 +222,43 @@ async def main() -> None:
                 if EXTRACT_SKILLS and matcher is not None:
                     text_value = cast(str, message.get("text") or "")
                     matched_keys = matcher.match_text(text_value)
-                    if matched_keys:
+
+                    # Cache skills/text for parent messages (to be inherited by replies)
+                    reply_count = cast(int, message.get("reply_count") or 0)
+                    parent_id_for_parent = cast(
+                        str, message.get("thread_ts") or message.get("ts") or ""
+                    )
+                    if reply_count > 0 and parent_id_for_parent:
+                        thread_context[parent_id_for_parent] = {
+                            "text": text_value,
+                            "skills": matched_keys,
+                        }
+
+                    # Inherit thread parent's skills for replies
+                    parent_text: str | None = None
+                    combined_keys = matched_keys
+                    is_reply = bool(message.get("thread_ts")) and message.get(
+                        "ts"
+                    ) != message.get("thread_ts")
+                    if is_reply:
+                        parent_id = cast(str, message.get("thread_ts") or "")
+                        parent_ctx = thread_context.get(parent_id)
+                        if parent_ctx:
+                            parent_text = cast(str, parent_ctx.get("text") or "")
+                            inherited = cast(list[str], parent_ctx.get("skills") or [])
+                            if inherited:
+                                seen: set[str] = set()
+                                combined_list: list[str] = []
+                                for k in list(matched_keys) + list(inherited):
+                                    if k not in seen:
+                                        combined_list.append(k)
+                                        seen.add(k)
+                                combined_keys = combined_list
+
+                    if combined_keys:
                         names = [
                             matcher.describe(k).name
-                            for k in matched_keys
+                            for k in combined_keys
                             if matcher.describe(k)
                         ]
                         if names:
@@ -238,8 +274,8 @@ async def main() -> None:
                                 author_id=cast(str, message.get("user") or ""),
                                 channel_id=channel["id"],
                                 text=text_value,
-                                parent_text=None,
-                                skill_keys=tuple(matched_keys),
+                                parent_text=parent_text,
+                                skill_keys=tuple(combined_keys),
                             )
                             try:
                                 evals = classify_messages([candidate])

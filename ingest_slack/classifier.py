@@ -3,13 +3,12 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from typing import Any
 
 try:
     from openai import OpenAI  # type: ignore
-    from openai.types.chat import ChatCompletionMessageParam  # type: ignore
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
-    ChatCompletionMessageParam = dict  # type: ignore
 
 
 DEFAULT_MODEL = "gpt-4o"
@@ -49,7 +48,8 @@ _SYSTEM_PROMPT = (
     "- negative_expertise: the author states they don't know / are unsure / are "
     "new to the skill.\n"
     "- neutral: question asking, quoting others, off-topic mentions.\n"
-    "Consider negation and quotes; do not attribute quoted text to the author."
+    "Consider negation and quotes; do not attribute quoted text to the author.\n"
+    "Return ONLY a JSON object (no code fences or prose)."
 )
 
 
@@ -89,23 +89,24 @@ def classify_messages(
 
     evaluations: list[MessageEvaluation] = []
     for candidate in candidates:
-        messages: list[ChatCompletionMessageParam] = [
+        messages: list[dict[str, Any]] = [
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": _build_user_prompt(candidate)},
         ]
 
-        resp = client.chat.completions.create(
+        resp = client.chat.completions.create(  # type: ignore[call-arg]
             model=use_model,
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             temperature=0.0,
         )
 
         raw = resp.choices[0].message.content or "{}"
-        try:
-            parsed = json.loads(raw)
-            items = parsed.get("results", [])
-        except Exception:
-            items = []
+        parsed = json.loads(raw)
+        items: list[dict[str, Any]] = (
+            [i for i in parsed.get("results", []) if isinstance(i, dict)]
+            if isinstance(parsed, dict)
+            else []
+        )
 
         result_items: list[SkillEvaluation] = []
         for item in items:
