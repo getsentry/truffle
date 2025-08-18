@@ -8,5 +8,6 @@
       "source.fixAll": "explicit"
     }
   },
-  "python.defaultInterpreterPath": "/Users/antonpirker/code/truffle/ingest_slack/.venv/bin/python"
+  "ruff.lint.run": "onType",
+  "ruff.organizeImports": true
 }
