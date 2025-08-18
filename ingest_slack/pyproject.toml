@@ -3,7 +3,12 @@ name = "ingest_slack"
 version = "0"
 requires-python = ">=3.13"
 
-dependencies = ["ipdb>=0.13.13", "ruff>=0.12.9", "slack-sdk>=3.36.0"]
+dependencies = [
+    "ipdb>=0.13.13",
+    "ruff>=0.12.9",
+    "slack-sdk>=3.36.0",
+    "aiohttp>=3.9",
+]
 
 [tool.ruff]
 line-length = 88
