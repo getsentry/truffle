@@ -6,8 +6,10 @@ from dataclasses import dataclass
 
 try:
     from openai import OpenAI  # type: ignore
+    from openai.types.chat import ChatCompletionMessageParam  # type: ignore
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
+    ChatCompletionMessageParam = dict  # type: ignore
 
 
 DEFAULT_MODEL = "gpt-4o"
@@ -87,7 +89,7 @@ def classify_messages(
 
     evaluations: list[MessageEvaluation] = []
     for candidate in candidates:
-        messages: list[dict[str, str]] = [
+        messages: list[ChatCompletionMessageParam] = [
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": _build_user_prompt(candidate)},
         ]
