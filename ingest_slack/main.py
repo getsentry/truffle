@@ -69,6 +69,7 @@ async def list_workspace_users(
                     "display_name": display_name,
                     "slack_name": slack_name,
                     "tz": tz,
+                    "raw_data": member,
                 }
             )
 
@@ -157,6 +158,9 @@ async def main() -> None:
             )
             user_dict[u["id"]] = u
 
+        import ipdb
+
+        ipdb.set_trace()
         # Messages
         for channel in channels:
             print(f"\nMessages in #{channel['name']} (including thread replies):")
