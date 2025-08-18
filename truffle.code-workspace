@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "slack_bot"
+		},
+		{
+			"path": "ingest_slack"
+		}
+	],
+	"settings": {}
+}

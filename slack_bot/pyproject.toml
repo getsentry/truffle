@@ -1,0 +1,28 @@
+[project]
+name = "slack_bot"
+version = "0"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "ipdb>=0.13.13",
+    "ruff>=0.12.9",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["slack_bot"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

@@ -1,0 +1,14 @@
+{
+  "python.defaultInterpreterPath": "/Users/antonpirker/code/truffle/slack_bot/.venv/bin/python",
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  },
+  "ruff.lint.run": "onType",
+  "ruff.organizeImports": true
+}
