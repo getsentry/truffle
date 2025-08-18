@@ -9,4 +9,4 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # Run the server
-uv run uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload

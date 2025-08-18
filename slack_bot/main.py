@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
 from models import (
     AskRequest,
@@ -19,7 +20,13 @@ def health() -> HealthResponse:
 
 
 @app.post("/slack/events", response_model=SlackEventsResponse)
-async def slack_events(_: SlackEventsRequest) -> SlackEventsResponse:
+async def slack_events(payload: SlackEventsRequest):
+    # Handle Slack URL verification challenge
+    print("slack_events:")
+    print(payload)
+    if payload.type == "url_verification" and payload.challenge:
+        return PlainTextResponse(payload.challenge)
+
     return SlackEventsResponse(ok=True, message="slack events received")
 
 
