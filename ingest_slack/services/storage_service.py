@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Any
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, text
 from sqlalchemy.dialects.postgresql import insert
 
 from database import AsyncSessionLocal, ExpertiseEvidence, Skill, User
@@ -164,7 +164,7 @@ class StorageService:
             """
 
             result = await session.execute(
-                query, {"skill_key": skill_key, "limit": limit}
+                text(query), {"skill_key": skill_key, "limit": limit}
             )
 
             experts = []
