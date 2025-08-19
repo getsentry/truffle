@@ -437,4 +437,11 @@ async def suggest_skills(
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True, log_level="info")
+    logger.info(f"Starting Ingestor Service on {settings.ingestor_host}:{settings.ingestor_port}")
+    uvicorn.run(
+        "main:app",
+        host=settings.ingestor_host,
+        port=settings.ingestor_port,
+        reload=True,
+        log_level=settings.log_level.lower()
+    )

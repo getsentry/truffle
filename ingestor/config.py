@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     extract_skills: bool = os.environ.get("EXTRACT_SKILLS") == "1"
     classify_expertise: bool = os.environ.get("CLASSIFY_EXPERTISE") == "1"
 
+    # Server configuration
+    ingestor_host: str = os.environ.get("INGESTOR_HOST", "0.0.0.0")
+    ingestor_port: int = int(os.environ.get("INGESTOR_PORT", "8001"))
+    log_level: str = os.environ.get("LOG_LEVEL", "INFO")
+
     # Scheduling
     ingestion_cron: str = "*/1 * * * *"  # Every minute
 
