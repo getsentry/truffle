@@ -1,0 +1,64 @@
+{
+  "domain": "data",
+  "skills": [
+    {
+      "key": "sql",
+      "name": "SQL",
+      "aliases": [
+        "sql"
+      ]
+    },
+    {
+      "key": "dbt",
+      "name": "dbt",
+      "aliases": [
+        "dbt"
+      ]
+    },
+    {
+      "key": "snowflake",
+      "name": "Snowflake",
+      "aliases": [
+        "snowflake"
+      ]
+    },
+    {
+      "key": "bigquery",
+      "name": "BigQuery",
+      "aliases": [
+        "bigquery",
+        "bq"
+      ]
+    },
+    {
+      "key": "etl",
+      "name": "ETL / ELT",
+      "aliases": [
+        "data pipeline",
+        "elt",
+        "etl"
+      ]
+    },
+    {
+      "key": "bi",
+      "name": "Business Intelligence",
+      "aliases": [
+        "bi",
+        "looker",
+        "power bi",
+        "powerbi",
+        "tableau"
+      ]
+    },
+    {
+      "key": "experimentation",
+      "name": "Experimentation / Stats",
+      "aliases": [
+        "bayesian",
+        "experimentation",
+        "frequentist",
+        "statistical testing"
+      ]
+    }
+  ]
+}

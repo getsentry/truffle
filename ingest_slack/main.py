@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
+from pathlib import Path
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
 from apscheduler.triggers.cron import CronTrigger  # type: ignore
@@ -9,6 +10,9 @@ from fastapi import FastAPI
 from config import settings
 from database import create_tables
 from schedulers.slack_ingestion import run_slack_ingestion
+from scripts.import_taxonomy import import_taxonomy_files
+from services.skill_service import SkillService
+from services.storage_service import StorageService
 
 # Configure logging
 logging.basicConfig(
@@ -18,6 +22,26 @@ logger = logging.getLogger(__name__)
 
 # Global scheduler
 scheduler = AsyncIOScheduler()
+
+
+async def auto_import_skills():
+    """Auto-import skills from JSON files if skills table is empty"""
+    try:
+        storage = StorageService()
+        existing_skills = await storage.get_all_skills()
+        if not existing_skills:
+            skills_dir = Path("skills")
+            if skills_dir.exists():
+                logger.info("Skills table empty, importing from JSON files...")
+                await import_taxonomy_files(skills_dir=skills_dir, validate_only=False)
+                logger.info("Skills imported successfully")
+            else:
+                logger.warning(f"Skills directory not found: {skills_dir}")
+        else:
+            logger.info(f"Skills table already contains {len(existing_skills)} skills")
+    except Exception as e:
+        logger.error(f"Failed to auto-import skills: {e}")
+        # Don't fail startup, just log the error
 
 
 @asynccontextmanager
@@ -30,6 +54,9 @@ async def lifespan(app: FastAPI):
     # Create database tables if they don't exist
     await create_tables()
     logger.info("Database tables ensured")
+
+    # Auto-import skills if table is empty
+    await auto_import_skills()
 
     # Add periodic ingestion job
     scheduler.add_job(
@@ -126,6 +153,36 @@ async def list_jobs():
         )
 
     return {"jobs": jobs}
+
+
+@app.post("/reload-skills")
+async def reload_skills():
+    """Force reload skills from database"""
+    skill_service = SkillService()
+    await skill_service.reload_skills()
+    return {"message": "Skills reloaded successfully"}
+
+
+@app.post("/import-skills")
+async def import_skills(validate_only: bool = False):
+    """Import skills from JSON files in skills/ directory"""
+    try:
+        skills_dir = Path("skills")
+        if not skills_dir.exists():
+            return {"error": "Skills directory not found", "path": str(skills_dir)}
+
+        await import_taxonomy_files(skills_dir=skills_dir, validate_only=validate_only)
+
+        # Reload skills in memory after successful import
+        if not validate_only:
+            skill_service = SkillService()
+            await skill_service.reload_skills()
+
+        action = "validated" if validate_only else "imported and reloaded"
+        return {"message": f"Skills {action} successfully"}
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":

@@ -1,0 +1,79 @@
+{
+  "domain": "sales",
+  "skills": [
+    {
+      "key": "salesforce",
+      "name": "Salesforce",
+      "aliases": [
+        "salesforce",
+        "sfdc"
+      ]
+    },
+    {
+      "key": "hubspot_crm",
+      "name": "HubSpot CRM",
+      "aliases": [
+        "hubspot",
+        "hubspot crm"
+      ]
+    },
+    {
+      "key": "prospecting",
+      "name": "Prospecting / Outbound",
+      "aliases": [
+        "cold outreach",
+        "outbound",
+        "prospecting"
+      ]
+    },
+    {
+      "key": "inbound_sales",
+      "name": "Inbound Sales",
+      "aliases": [
+        "inbound sales"
+      ]
+    },
+    {
+      "key": "negotiation",
+      "name": "Negotiation",
+      "aliases": [
+        "negotiation"
+      ]
+    },
+    {
+      "key": "forecasting",
+      "name": "Forecasting & Pipeline",
+      "aliases": [
+        "forecasting",
+        "pipeline"
+      ]
+    },
+    {
+      "key": "meddic",
+      "name": "MEDDIC / Qualification",
+      "aliases": [
+        "bant",
+        "meddic",
+        "qualification"
+      ]
+    },
+    {
+      "key": "pricing",
+      "name": "Pricing & Packaging",
+      "aliases": [
+        "packaging",
+        "pricing"
+      ]
+    },
+    {
+      "key": "renewals",
+      "name": "Renewals / Expansion",
+      "aliases": [
+        "cross-sell",
+        "expansion",
+        "renewals",
+        "upsell"
+      ]
+    }
+  ]
+}

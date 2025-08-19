@@ -1,0 +1,942 @@
+{
+  "domain": "engineering",
+  "skills": [
+    {
+      "key": "android",
+      "name": "Android",
+      "aliases": [
+        "android",
+        "java android",
+        "kotlin android"
+      ]
+    },
+    {
+      "key": "apple",
+      "name": "Apple (iOS/macOS)",
+      "aliases": [
+        "apple",
+        "ios",
+        "macos",
+        "objc",
+        "objective-c",
+        "swift"
+      ]
+    },
+    {
+      "key": "dart",
+      "name": "Dart",
+      "aliases": [
+        "dart"
+      ]
+    },
+    {
+      "key": "elixir",
+      "name": "Elixir",
+      "aliases": [
+        "elixir"
+      ]
+    },
+    {
+      "key": "go",
+      "name": "Go",
+      "aliases": [
+        "go",
+        "golang"
+      ]
+    },
+    {
+      "key": "godot",
+      "name": "Godot Engine",
+      "aliases": [
+        "godot",
+        "godot engine"
+      ]
+    },
+    {
+      "key": "java",
+      "name": "Java",
+      "aliases": [
+        "java",
+        "jvm"
+      ]
+    },
+    {
+      "key": "javascript",
+      "name": "JavaScript",
+      "aliases": [
+        "javascript",
+        "js"
+      ]
+    },
+    {
+      "key": "typescript",
+      "name": "TypeScript",
+      "aliases": [
+        "ts-node",
+        "tsconfig",
+        "typescript"
+      ]
+    },
+    {
+      "key": "react",
+      "name": "React",
+      "aliases": [
+        "react",
+        "react.js",
+        "reactjs"
+      ]
+    },
+    {
+      "key": "nextjs",
+      "name": "Next.js",
+      "aliases": [
+        "next js",
+        "next.js",
+        "nextjs"
+      ]
+    },
+    {
+      "key": "nodejs",
+      "name": "Node.js",
+      "aliases": [
+        "node",
+        "node.js",
+        "nodejs"
+      ]
+    },
+    {
+      "key": "express",
+      "name": "Express",
+      "aliases": [
+        "express",
+        "express.js",
+        "expressjs"
+      ]
+    },
+    {
+      "key": "angular",
+      "name": "Angular",
+      "aliases": [
+        "angular"
+      ]
+    },
+    {
+      "key": "vue",
+      "name": "Vue",
+      "aliases": [
+        "vue",
+        "vue.js",
+        "vuejs"
+      ]
+    },
+    {
+      "key": "svelte",
+      "name": "Svelte",
+      "aliases": [
+        "svelte"
+      ]
+    },
+    {
+      "key": "remix",
+      "name": "Remix",
+      "aliases": [
+        "remix",
+        "remix.run"
+      ]
+    },
+    {
+      "key": "nuxt",
+      "name": "Nuxt",
+      "aliases": [
+        "nuxt",
+        "nuxt.js",
+        "nuxtjs"
+      ]
+    },
+    {
+      "key": "gatsby",
+      "name": "Gatsby",
+      "aliases": [
+        "gatsby",
+        "gatsbyjs"
+      ]
+    },
+    {
+      "key": "astro",
+      "name": "Astro",
+      "aliases": [
+        "astro",
+        "astro.build"
+      ]
+    },
+    {
+      "key": "preact",
+      "name": "Preact",
+      "aliases": [
+        "preact"
+      ]
+    },
+    {
+      "key": "solid",
+      "name": "SolidJS",
+      "aliases": [
+        "solid",
+        "solid.js",
+        "solidjs"
+      ]
+    },
+    {
+      "key": "ember",
+      "name": "Ember",
+      "aliases": [
+        "ember",
+        "ember.js",
+        "emberjs"
+      ]
+    },
+    {
+      "key": "electron",
+      "name": "Electron",
+      "aliases": [
+        "electron",
+        "electron.js",
+        "electronjs"
+      ]
+    },
+    {
+      "key": "deno",
+      "name": "Deno",
+      "aliases": [
+        "deno"
+      ]
+    },
+    {
+      "key": "bun",
+      "name": "Bun",
+      "aliases": [
+        "bun",
+        "bun.sh"
+      ]
+    },
+    {
+      "key": "cloudflare_workers",
+      "name": "Cloudflare Workers",
+      "aliases": [
+        "cloudflare workers"
+      ]
+    },
+    {
+      "key": "cloudflare",
+      "name": "Cloudflare",
+      "aliases": [
+        "cloudflare"
+      ]
+    },
+    {
+      "key": "aws_lambda",
+      "name": "AWS Lambda",
+      "aliases": [
+        "aws lambda",
+        "aws-lambda",
+        "lambda"
+      ]
+    },
+    {
+      "key": "gcp_functions",
+      "name": "GCP Cloud Functions",
+      "aliases": [
+        "cloud functions",
+        "gcp functions",
+        "gcp-functions"
+      ]
+    },
+    {
+      "key": "azure_functions",
+      "name": "Azure Functions",
+      "aliases": [
+        "azure functions",
+        "azure-functions"
+      ]
+    },
+    {
+      "key": "fastify",
+      "name": "Fastify",
+      "aliases": [
+        "fastify"
+      ]
+    },
+    {
+      "key": "hapi",
+      "name": "hapi",
+      "aliases": [
+        "@hapi",
+        "hapi"
+      ]
+    },
+    {
+      "key": "hono",
+      "name": "Hono",
+      "aliases": [
+        "hono"
+      ]
+    },
+    {
+      "key": "koa",
+      "name": "Koa",
+      "aliases": [
+        "koa"
+      ]
+    },
+    {
+      "key": "nestjs",
+      "name": "NestJS",
+      "aliases": [
+        "nest",
+        "nest.js",
+        "nestjs"
+      ]
+    },
+    {
+      "key": "connect",
+      "name": "Connect (Node)",
+      "aliases": [
+        "connect"
+      ]
+    },
+    {
+      "key": "react_router",
+      "name": "React Router",
+      "aliases": [
+        "react router",
+        "react-router"
+      ]
+    },
+    {
+      "key": "solidstart",
+      "name": "SolidStart",
+      "aliases": [
+        "solid start",
+        "solidstart"
+      ]
+    },
+    {
+      "key": "sveltekit",
+      "name": "SvelteKit",
+      "aliases": [
+        "sveltekit"
+      ]
+    },
+    {
+      "key": "tanstackstart_react",
+      "name": "TanStack Start (React)",
+      "aliases": [
+        "tanstack start",
+        "tanstack start react",
+        "tanstackstart-react"
+      ]
+    },
+    {
+      "key": "wasm",
+      "name": "WebAssembly",
+      "aliases": [
+        "wasm",
+        "web assembly",
+        "webassembly"
+      ]
+    },
+    {
+      "key": "ionic",
+      "name": "Ionic",
+      "aliases": [
+        "ionic"
+      ]
+    },
+    {
+      "key": "capacitor",
+      "name": "Capacitor",
+      "aliases": [
+        "@capacitor",
+        "capacitor"
+      ]
+    },
+    {
+      "key": "cordova",
+      "name": "Cordova",
+      "aliases": [
+        "apache cordova",
+        "cordova",
+        "phonegap"
+      ]
+    },
+    {
+      "key": "service_workers",
+      "name": "Service Workers",
+      "aliases": [
+        "service worker",
+        "service workers"
+      ]
+    },
+    {
+      "key": "web_extensions",
+      "name": "Web Extensions",
+      "aliases": [
+        "browser extension",
+        "web extension",
+        "web extensions",
+        "webextension",
+        "webextensions"
+      ]
+    },
+    {
+      "key": "vite",
+      "name": "Vite",
+      "aliases": [
+        "vite",
+        "vite.js",
+        "vitejs"
+      ]
+    },
+    {
+      "key": "kotlin",
+      "name": "Kotlin",
+      "aliases": [
+        "kotlin"
+      ]
+    },
+    {
+      "key": "native",
+      "name": "Native (C/C++)",
+      "aliases": [
+        "c",
+        "c++",
+        "c/c++",
+        "native"
+      ]
+    },
+    {
+      "key": "dotnet",
+      "name": ".NET",
+      "aliases": [
+        ".net",
+        "asp.net",
+        "c#",
+        "dotnet"
+      ]
+    },
+    {
+      "key": "nintendo_switch",
+      "name": "Nintendo Switch",
+      "aliases": [
+        "nintendo switch",
+        "switch"
+      ]
+    },
+    {
+      "key": "php",
+      "name": "PHP",
+      "aliases": [
+        "laravel",
+        "php",
+        "symfony"
+      ]
+    },
+    {
+      "key": "playstation",
+      "name": "PlayStation",
+      "aliases": [
+        "playstation",
+        "ps4",
+        "ps5"
+      ]
+    },
+    {
+      "key": "powershell",
+      "name": "PowerShell",
+      "aliases": [
+        "powershell",
+        "ps",
+        "ps1"
+      ]
+    },
+    {
+      "key": "python",
+      "name": "Python",
+      "aliases": [
+        "django",
+        "fastapi",
+        "flask",
+        "python"
+      ]
+    },
+    {
+      "key": "django",
+      "name": "Django",
+      "aliases": [
+        "django"
+      ]
+    },
+    {
+      "key": "flask",
+      "name": "Flask",
+      "aliases": [
+        "flask"
+      ]
+    },
+    {
+      "key": "fastapi",
+      "name": "FastAPI",
+      "aliases": [
+        "fastapi"
+      ]
+    },
+    {
+      "key": "aiohttp",
+      "name": "AIOHTTP",
+      "aliases": [
+        "aiohttp"
+      ]
+    },
+    {
+      "key": "bottle",
+      "name": "Bottle",
+      "aliases": [
+        "bottle"
+      ]
+    },
+    {
+      "key": "falcon",
+      "name": "Falcon",
+      "aliases": [
+        "falcon"
+      ]
+    },
+    {
+      "key": "pyramid",
+      "name": "Pyramid",
+      "aliases": [
+        "pyramid"
+      ]
+    },
+    {
+      "key": "quart",
+      "name": "Quart",
+      "aliases": [
+        "quart"
+      ]
+    },
+    {
+      "key": "sanic",
+      "name": "Sanic",
+      "aliases": [
+        "sanic"
+      ]
+    },
+    {
+      "key": "starlette",
+      "name": "Starlette",
+      "aliases": [
+        "starlette"
+      ]
+    },
+    {
+      "key": "starlite",
+      "name": "Starlite",
+      "aliases": [
+        "starlite"
+      ]
+    },
+    {
+      "key": "litestar",
+      "name": "Litestar",
+      "aliases": [
+        "litestar"
+      ]
+    },
+    {
+      "key": "tornado",
+      "name": "Tornado",
+      "aliases": [
+        "tornado"
+      ]
+    },
+    {
+      "key": "asyncpg",
+      "name": "asyncpg",
+      "aliases": [
+        "asyncpg"
+      ]
+    },
+    {
+      "key": "clickhouse_driver",
+      "name": "clickhouse-driver",
+      "aliases": [
+        "clickhouse",
+        "clickhouse-driver"
+      ]
+    },
+    {
+      "key": "pymongo",
+      "name": "PyMongo",
+      "aliases": [
+        "mongo",
+        "mongodb",
+        "pymongo"
+      ]
+    },
+    {
+      "key": "redis",
+      "name": "Redis",
+      "aliases": [
+        "redis"
+      ]
+    },
+    {
+      "key": "sqlalchemy",
+      "name": "SQLAlchemy",
+      "aliases": [
+        "sqlalchemy"
+      ]
+    },
+    {
+      "key": "anthropic",
+      "name": "Anthropic",
+      "aliases": [
+        "anthropic"
+      ]
+    },
+    {
+      "key": "openai",
+      "name": "OpenAI",
+      "aliases": [
+        "openai"
+      ]
+    },
+    {
+      "key": "openai_agents",
+      "name": "OpenAI Agents SDK",
+      "aliases": [
+        "openai agents",
+        "openai-agents"
+      ]
+    },
+    {
+      "key": "langchain",
+      "name": "LangChain",
+      "aliases": [
+        "langchain"
+      ]
+    },
+    {
+      "key": "airflow",
+      "name": "Apache Airflow",
+      "aliases": [
+        "airflow",
+        "apache airflow"
+      ]
+    },
+    {
+      "key": "beam",
+      "name": "Apache Beam",
+      "aliases": [
+        "apache beam",
+        "beam"
+      ]
+    },
+    {
+      "key": "spark",
+      "name": "Apache Spark",
+      "aliases": [
+        "apache spark",
+        "spark"
+      ]
+    },
+    {
+      "key": "arq",
+      "name": "ARQ",
+      "aliases": [
+        "arq"
+      ]
+    },
+    {
+      "key": "celery",
+      "name": "Celery",
+      "aliases": [
+        "celery"
+      ]
+    },
+    {
+      "key": "dramatiq",
+      "name": "Dramatiq",
+      "aliases": [
+        "dramatiq"
+      ]
+    },
+    {
+      "key": "huey",
+      "name": "Huey",
+      "aliases": [
+        "huey"
+      ]
+    },
+    {
+      "key": "rq",
+      "name": "RQ",
+      "aliases": [
+        "redis queue",
+        "rq"
+      ]
+    },
+    {
+      "key": "ray",
+      "name": "Ray",
+      "aliases": [
+        "ray"
+      ]
+    },
+    {
+      "key": "launchdarkly",
+      "name": "LaunchDarkly",
+      "aliases": [
+        "launchdarkly"
+      ]
+    },
+    {
+      "key": "openfeature",
+      "name": "OpenFeature",
+      "aliases": [
+        "openfeature"
+      ]
+    },
+    {
+      "key": "statsig",
+      "name": "Statsig",
+      "aliases": [
+        "statsig"
+      ]
+    },
+    {
+      "key": "unleash",
+      "name": "Unleash",
+      "aliases": [
+        "unleash"
+      ]
+    },
+    {
+      "key": "boto3",
+      "name": "Boto3",
+      "aliases": [
+        "boto3"
+      ]
+    },
+    {
+      "key": "chalice",
+      "name": "Chalice",
+      "aliases": [
+        "aws chalice",
+        "chalice"
+      ]
+    },
+    {
+      "key": "cloud_resource_context",
+      "name": "Cloud Resource Context",
+      "aliases": [
+        "cloud resource context"
+      ]
+    },
+    {
+      "key": "serverless_framework",
+      "name": "Serverless Framework",
+      "aliases": [
+        "serverless",
+        "serverless framework"
+      ]
+    },
+    {
+      "key": "httpx",
+      "name": "HTTPX",
+      "aliases": [
+        "httpx"
+      ]
+    },
+    {
+      "key": "requests",
+      "name": "Requests",
+      "aliases": [
+        "requests"
+      ]
+    },
+    {
+      "key": "ariadne",
+      "name": "Ariadne",
+      "aliases": [
+        "ariadne"
+      ]
+    },
+    {
+      "key": "gql",
+      "name": "GQL",
+      "aliases": [
+        "gql"
+      ]
+    },
+    {
+      "key": "graphene",
+      "name": "Graphene",
+      "aliases": [
+        "graphene"
+      ]
+    },
+    {
+      "key": "strawberry",
+      "name": "Strawberry",
+      "aliases": [
+        "strawberry"
+      ]
+    },
+    {
+      "key": "grpc",
+      "name": "gRPC",
+      "aliases": [
+        "grpc"
+      ]
+    },
+    {
+      "key": "logging",
+      "name": "Python Logging",
+      "aliases": [
+        "logging",
+        "python logging"
+      ]
+    },
+    {
+      "key": "loguru",
+      "name": "Loguru",
+      "aliases": [
+        "loguru"
+      ]
+    },
+    {
+      "key": "asgi",
+      "name": "ASGI",
+      "aliases": [
+        "asgi"
+      ]
+    },
+    {
+      "key": "asyncio",
+      "name": "asyncio",
+      "aliases": [
+        "asyncio"
+      ]
+    },
+    {
+      "key": "pure_eval",
+      "name": "pure_eval",
+      "aliases": [
+        "pure eval",
+        "pure_eval"
+      ]
+    },
+    {
+      "key": "gnu_backtrace",
+      "name": "GNU Backtrace",
+      "aliases": [
+        "gnu backtrace"
+      ]
+    },
+    {
+      "key": "rust_tracing",
+      "name": "Rust Tracing",
+      "aliases": [
+        "rust tracing"
+      ]
+    },
+    {
+      "key": "socket",
+      "name": "Socket",
+      "aliases": [
+        "socket"
+      ]
+    },
+    {
+      "key": "sys_exit",
+      "name": "sys.exit",
+      "aliases": [
+        "sys exit",
+        "sys.exit"
+      ]
+    },
+    {
+      "key": "tryton",
+      "name": "Tryton",
+      "aliases": [
+        "tryton"
+      ]
+    },
+    {
+      "key": "typer",
+      "name": "Typer",
+      "aliases": [
+        "typer"
+      ]
+    },
+    {
+      "key": "wsgi",
+      "name": "WSGI",
+      "aliases": [
+        "wsgi"
+      ]
+    },
+    {
+      "key": "react_native",
+      "name": "React Native",
+      "aliases": [
+        "react native",
+        "rn"
+      ]
+    },
+    {
+      "key": "ruby",
+      "name": "Ruby",
+      "aliases": [
+        "rails",
+        "ruby",
+        "ruby on rails"
+      ]
+    },
+    {
+      "key": "rust",
+      "name": "Rust",
+      "aliases": [
+        "rust"
+      ]
+    },
+    {
+      "key": "unity",
+      "name": "Unity",
+      "aliases": [
+        "unity",
+        "unity 3d",
+        "unity3d"
+      ]
+    },
+    {
+      "key": "unreal",
+      "name": "Unreal Engine",
+      "aliases": [
+        "ue",
+        "ue4",
+        "ue5",
+        "unreal",
+        "unreal engine"
+      ]
+    },
+    {
+      "key": "xbox",
+      "name": "Xbox",
+      "aliases": [
+        "xbox"
+      ]
+    }
+  ]
+}

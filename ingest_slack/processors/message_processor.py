@@ -39,7 +39,7 @@ class MessageProcessor:
         if not settings.extract_skills:
             return
 
-        matched_skills = self.skill_service.match_text(text)
+        matched_skills = await self.skill_service.match_text(text)
         if not matched_skills:
             logger.debug("No skills matched in message")
             return

@@ -1,0 +1,75 @@
+{
+  "domain": "devops",
+  "skills": [
+    {
+      "key": "aws",
+      "name": "AWS",
+      "aliases": [
+        "amazon web services",
+        "aws",
+        "ec2",
+        "lambda",
+        "s3"
+      ]
+    },
+    {
+      "key": "gcp",
+      "name": "GCP",
+      "aliases": [
+        "bigquery",
+        "gcp",
+        "gke",
+        "google cloud"
+      ]
+    },
+    {
+      "key": "azure",
+      "name": "Azure",
+      "aliases": [
+        "azure"
+      ]
+    },
+    {
+      "key": "kubernetes",
+      "name": "Kubernetes",
+      "aliases": [
+        "k8s",
+        "kubernetes"
+      ]
+    },
+    {
+      "key": "docker",
+      "name": "Docker",
+      "aliases": [
+        "docker"
+      ]
+    },
+    {
+      "key": "terraform",
+      "name": "Terraform",
+      "aliases": [
+        "terraform"
+      ]
+    },
+    {
+      "key": "cicd",
+      "name": "CI/CD",
+      "aliases": [
+        "ci cd",
+        "ci/cd",
+        "continuous delivery",
+        "continuous integration"
+      ]
+    },
+    {
+      "key": "observability",
+      "name": "Observability",
+      "aliases": [
+        "grafana",
+        "observability",
+        "prometheus",
+        "sentry"
+      ]
+    }
+  ]
+}

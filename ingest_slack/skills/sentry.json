@@ -1,0 +1,405 @@
+{
+  "domain": "sentry",
+  "skills": [
+    {
+      "key": "ai_in_sentry",
+      "name": "AI in Sentry",
+      "aliases": [
+        "ai-in-sentry"
+      ]
+    },
+    {
+      "key": "ai_privacy_and_security",
+      "name": "AI Privacy and Security",
+      "aliases": [
+        "ai privacy",
+        "ai security",
+        "ai-privacy-and-security"
+      ]
+    },
+    {
+      "key": "seer",
+      "name": "Seer",
+      "aliases": [
+        "seer"
+      ]
+    },
+    {
+      "key": "sentry_prevent_ai",
+      "name": "Sentry Prevent AI",
+      "aliases": [
+        "sentry-prevent-ai"
+      ]
+    },
+    {
+      "key": "alerts",
+      "name": "Alerts",
+      "aliases": [
+        "alerts"
+      ]
+    },
+    {
+      "key": "create_alerts",
+      "name": "Create Alerts",
+      "aliases": [
+        "create-alerts"
+      ]
+    },
+    {
+      "key": "notifications",
+      "name": "Notifications",
+      "aliases": [
+        "notifications"
+      ]
+    },
+    {
+      "key": "codecov",
+      "name": "Codecov",
+      "aliases": [
+        "codecov"
+      ]
+    },
+    {
+      "key": "crons",
+      "name": "Crons",
+      "aliases": [
+        "crons"
+      ]
+    },
+    {
+      "key": "dashboards",
+      "name": "Dashboards",
+      "aliases": [
+        "dashboards"
+      ]
+    },
+    {
+      "key": "custom_dashboards",
+      "name": "Custom Dashboards",
+      "aliases": [
+        "custom-dashboards"
+      ]
+    },
+    {
+      "key": "widget_builder",
+      "name": "Widget Builder",
+      "aliases": [
+        "widget-builder"
+      ]
+    },
+    {
+      "key": "widget_library",
+      "name": "Widget Library",
+      "aliases": [
+        "widget-library"
+      ]
+    },
+    {
+      "key": "explore",
+      "name": "Explore",
+      "aliases": [
+        "explore"
+      ]
+    },
+    {
+      "key": "discover_queries",
+      "name": "Discover Queries",
+      "aliases": [
+        "discover-queries"
+      ]
+    },
+    {
+      "key": "logs",
+      "name": "Logs",
+      "aliases": [
+        "logs"
+      ]
+    },
+    {
+      "key": "profiling",
+      "name": "Profiling",
+      "aliases": [
+        "profiling"
+      ]
+    },
+    {
+      "key": "session_replay",
+      "name": "Session Replay",
+      "aliases": [
+        "session-replay"
+      ]
+    },
+    {
+      "key": "trace_explorer",
+      "name": "Trace Explorer",
+      "aliases": [
+        "trace-explorer"
+      ]
+    },
+    {
+      "key": "insights",
+      "name": "Insights",
+      "aliases": [
+        "insights"
+      ]
+    },
+    {
+      "key": "insights_ai",
+      "name": "Insights - AI",
+      "aliases": [
+        "insights ai"
+      ]
+    },
+    {
+      "key": "insights_backend",
+      "name": "Insights - Backend",
+      "aliases": [
+        "insights backend"
+      ]
+    },
+    {
+      "key": "insights_frontend",
+      "name": "Insights - Frontend",
+      "aliases": [
+        "insights frontend"
+      ]
+    },
+    {
+      "key": "insights_mobile",
+      "name": "Insights - Mobile",
+      "aliases": [
+        "insights mobile"
+      ]
+    },
+    {
+      "key": "insights_overview",
+      "name": "Insights - Overview",
+      "aliases": [
+        "insights overview"
+      ]
+    },
+    {
+      "key": "insights_getting_started",
+      "name": "Insights - Getting Started",
+      "aliases": [
+        "getting-started.mdx",
+        "insights getting started"
+      ]
+    },
+    {
+      "key": "performance_overhead",
+      "name": "Performance Overhead",
+      "aliases": [
+        "performance overhead",
+        "performance-overhead.mdx"
+      ]
+    },
+    {
+      "key": "issues",
+      "name": "Issues",
+      "aliases": [
+        "issues"
+      ]
+    },
+    {
+      "key": "grouping_and_fingerprints",
+      "name": "Grouping and Fingerprints",
+      "aliases": [
+        "grouping-and-fingerprints"
+      ]
+    },
+    {
+      "key": "issue_details",
+      "name": "Issue Details",
+      "aliases": [
+        "issue-details"
+      ]
+    },
+    {
+      "key": "issue_priority",
+      "name": "Issue Priority",
+      "aliases": [
+        "issue-priority"
+      ]
+    },
+    {
+      "key": "issue_views",
+      "name": "Issue Views",
+      "aliases": [
+        "issue-views"
+      ]
+    },
+    {
+      "key": "ownership_rules",
+      "name": "Ownership Rules",
+      "aliases": [
+        "ownership-rules"
+      ]
+    },
+    {
+      "key": "reprocessing",
+      "name": "Reprocessing",
+      "aliases": [
+        "reprocessing"
+      ]
+    },
+    {
+      "key": "states_triage",
+      "name": "States & Triage",
+      "aliases": [
+        "states-triage"
+      ]
+    },
+    {
+      "key": "suspect_commits",
+      "name": "Suspect Commits",
+      "aliases": [
+        "suspect-commits"
+      ]
+    },
+    {
+      "key": "onboarding_sentry",
+      "name": "Onboarding (Sentry)",
+      "aliases": [
+        "onboarding"
+      ]
+    },
+    {
+      "key": "partnership_platform",
+      "name": "Partnership Platform",
+      "aliases": [
+        "partnership-platform"
+      ]
+    },
+    {
+      "key": "account_provisioning_api",
+      "name": "Account Provisioning API",
+      "aliases": [
+        "account-provisioning-api"
+      ]
+    },
+    {
+      "key": "projects",
+      "name": "Projects",
+      "aliases": [
+        "projects"
+      ]
+    },
+    {
+      "key": "project_details",
+      "name": "Project Details",
+      "aliases": [
+        "project-details"
+      ]
+    },
+    {
+      "key": "relay",
+      "name": "Relay",
+      "aliases": [
+        "relay"
+      ]
+    },
+    {
+      "key": "releases",
+      "name": "Releases",
+      "aliases": [
+        "releases"
+      ]
+    },
+    {
+      "key": "associate_commits",
+      "name": "Associate Commits",
+      "aliases": [
+        "associate-commits"
+      ]
+    },
+    {
+      "key": "release_health",
+      "name": "Release Health",
+      "aliases": [
+        "health",
+        "release health"
+      ]
+    },
+    {
+      "key": "sentry_basics",
+      "name": "Sentry Basics",
+      "aliases": [
+        "sentry-basics"
+      ]
+    },
+    {
+      "key": "distributed_tracing",
+      "name": "Distributed Tracing",
+      "aliases": [
+        "distributed-tracing"
+      ]
+    },
+    {
+      "key": "sentry_mcp",
+      "name": "Sentry MCP",
+      "aliases": [
+        "sentry-mcp"
+      ]
+    },
+    {
+      "key": "sentry_toolbar",
+      "name": "Sentry Toolbar",
+      "aliases": [
+        "sentry-toolbar"
+      ]
+    },
+    {
+      "key": "stats",
+      "name": "Stats",
+      "aliases": [
+        "stats"
+      ]
+    },
+    {
+      "key": "uptime_monitoring",
+      "name": "Uptime Monitoring",
+      "aliases": [
+        "uptime monitoring",
+        "uptime-monitoring"
+      ]
+    },
+    {
+      "key": "user_feedback",
+      "name": "User Feedback",
+      "aliases": [
+        "user feedback",
+        "user-feedback"
+      ]
+    },
+    {
+      "key": "security_legal_pii",
+      "name": "Security, Legal & PII",
+      "aliases": [
+        "security-legal-pii"
+      ]
+    },
+    {
+      "key": "pii",
+      "name": "PII (Personal Identifiable Information)",
+      "aliases": [
+        "personal identifiable information",
+        "pii"
+      ]
+    },
+    {
+      "key": "scrubbing",
+      "name": "Data Scrubbing",
+      "aliases": [
+        "scrubbing"
+      ]
+    },
+    {
+      "key": "security",
+      "name": "Security",
+      "aliases": [
+        "security"
+      ]
+    }
+  ]
+}

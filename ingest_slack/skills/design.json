@@ -1,0 +1,51 @@
+{
+  "domain": "design",
+  "skills": [
+    {
+      "key": "ux",
+      "name": "UX",
+      "aliases": [
+        "user experience",
+        "ux"
+      ]
+    },
+    {
+      "key": "ui",
+      "name": "UI",
+      "aliases": [
+        "ui",
+        "user interface"
+      ]
+    },
+    {
+      "key": "product_design",
+      "name": "Product Design",
+      "aliases": [
+        "product design"
+      ]
+    },
+    {
+      "key": "design_systems",
+      "name": "Design Systems",
+      "aliases": [
+        "design system",
+        "design systems"
+      ]
+    },
+    {
+      "key": "figma",
+      "name": "Figma",
+      "aliases": [
+        "figma"
+      ]
+    },
+    {
+      "key": "accessibility",
+      "name": "Accessibility (a11y)",
+      "aliases": [
+        "a11y",
+        "accessibility"
+      ]
+    }
+  ]
+}

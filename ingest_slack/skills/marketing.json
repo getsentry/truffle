@@ -1,0 +1,106 @@
+{
+  "domain": "marketing",
+  "skills": [
+    {
+      "key": "seo",
+      "name": "SEO",
+      "aliases": [
+        "search engine optimization",
+        "seo"
+      ]
+    },
+    {
+      "key": "sem",
+      "name": "SEM / Paid Search",
+      "aliases": [
+        "adwords",
+        "google ads",
+        "paid search",
+        "sem"
+      ]
+    },
+    {
+      "key": "content_marketing",
+      "name": "Content Marketing",
+      "aliases": [
+        "content marketing",
+        "copywriting",
+        "editorial"
+      ]
+    },
+    {
+      "key": "email_marketing",
+      "name": "Email Marketing",
+      "aliases": [
+        "email marketing",
+        "hubspot email",
+        "mailchimp",
+        "marketo"
+      ]
+    },
+    {
+      "key": "marketing_automation",
+      "name": "Marketing Automation",
+      "aliases": [
+        "hubspot",
+        "marketing automation",
+        "marketo",
+        "pardot"
+      ]
+    },
+    {
+      "key": "product_marketing",
+      "name": "Product Marketing",
+      "aliases": [
+        "pmm",
+        "product marketing"
+      ]
+    },
+    {
+      "key": "growth",
+      "name": "Growth Marketing",
+      "aliases": [
+        "growth",
+        "growth loops",
+        "growth marketing"
+      ]
+    },
+    {
+      "key": "social_media",
+      "name": "Social Media",
+      "aliases": [
+        "linkedin",
+        "social media",
+        "twitter",
+        "x"
+      ]
+    },
+    {
+      "key": "analytics_ga",
+      "name": "Web Analytics (GA4)",
+      "aliases": [
+        "ga4",
+        "google analytics",
+        "web analytics"
+      ]
+    },
+    {
+      "key": "ab_testing",
+      "name": "A/B Testing / Experimentation",
+      "aliases": [
+        "a/b testing",
+        "ab testing",
+        "experimentation",
+        "optimizely"
+      ]
+    },
+    {
+      "key": "cro",
+      "name": "Conversion Rate Optimization",
+      "aliases": [
+        "conversion rate optimization",
+        "cro"
+      ]
+    }
+  ]
+}

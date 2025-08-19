@@ -1,0 +1,54 @@
+{
+  "domain": "product",
+  "skills": [
+    {
+      "key": "product_management",
+      "name": "Product Management",
+      "aliases": [
+        "pm",
+        "product management"
+      ]
+    },
+    {
+      "key": "roadmapping",
+      "name": "Roadmapping",
+      "aliases": [
+        "roadmap",
+        "roadmapping"
+      ]
+    },
+    {
+      "key": "prioritization",
+      "name": "Prioritization",
+      "aliases": [
+        "prioritization",
+        "rice",
+        "wsjf"
+      ]
+    },
+    {
+      "key": "user_research",
+      "name": "User Research",
+      "aliases": [
+        "interviews",
+        "usability testing",
+        "user research"
+      ]
+    },
+    {
+      "key": "okrs",
+      "name": "OKRs",
+      "aliases": [
+        "okrs"
+      ]
+    },
+    {
+      "key": "plg",
+      "name": "Product-Led Growth",
+      "aliases": [
+        "plg",
+        "product led growth"
+      ]
+    }
+  ]
+}

@@ -53,6 +53,12 @@ class StorageService:
             )
             return result.scalar_one_or_none()
 
+    async def get_all_skills(self) -> list[Skill]:
+        """Get all skills from database"""
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(Skill))
+            return list(result.scalars().all())
+
     async def upsert_skills(self, skills_data: list[dict[str, Any]]):
         """Insert or update skills from taxonomy"""
         async with AsyncSessionLocal() as session:
@@ -61,12 +67,14 @@ class StorageService:
                     skill_key=skill_data["skill_key"],
                     name=skill_data["name"],
                     domain=skill_data["domain"],
+                    aliases=skill_data.get("aliases"),
                 )
                 stmt = stmt.on_conflict_do_update(
                     index_elements=["skill_key"],
                     set_=dict(
                         name=stmt.excluded.name,
                         domain=stmt.excluded.domain,
+                        aliases=stmt.excluded.aliases,
                     ),
                 )
                 await session.execute(stmt)

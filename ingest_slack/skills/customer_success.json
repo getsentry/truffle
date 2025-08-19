@@ -1,0 +1,32 @@
+{
+  "domain": "customer_success",
+  "skills": [
+    {
+      "key": "onboarding",
+      "name": "Customer Onboarding",
+      "aliases": [
+        "onboarding"
+      ]
+    },
+    {
+      "key": "retention",
+      "name": "Retention / NRR",
+      "aliases": [
+        "churn",
+        "nrr",
+        "retention"
+      ]
+    },
+    {
+      "key": "support",
+      "name": "Customer Support / SLAs",
+      "aliases": [
+        "intercom",
+        "sla",
+        "support",
+        "ticketing",
+        "zendesk"
+      ]
+    }
+  ]
+}

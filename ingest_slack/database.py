@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -34,6 +34,7 @@ class Skill(Base):
     skill_key: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     domain: Mapped[str] = mapped_column(String, nullable=False)
+    aliases: Mapped[str | None] = mapped_column(Text)  # JSON array of aliases
     # embedding: Mapped[Optional[str]] = mapped_column(Text)  # JSON serialized for now
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
