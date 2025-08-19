@@ -15,6 +15,7 @@ from models import (
     SlackEventsRequest,
     SlackEventsResponse,
 )
+from services import EventProcessor
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +23,10 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Initialize event processor
+# TODO: Get bot_user_id from Slack API or config
+event_processor = EventProcessor(bot_user_id=None)
 
 # Create FastAPI app
 app = FastAPI(
@@ -73,22 +78,36 @@ async def slack_events(payload: SlackEventsRequest):
         return PlainTextResponse(payload.challenge)
 
     # Handle actual events
-    if payload.type == "event_callback" and payload.event:
-        event = payload.event
-        event_type = event.get("type")
+    if payload.type == "event_callback":
+        try:
+            # Process the event and extract expert query
+            expert_query = await event_processor.process_slack_event(
+                payload.model_dump()
+            )
 
-        logger.info(f"Processing event type: {event_type}")
+            if expert_query:
+                logger.info(
+                    f"Extracted expert query: {expert_query.query_type} "
+                    f"for skills: {expert_query.skills}"
+                )
 
-        if event_type in ["app_mention", "message"]:
-            # Extract message details
-            text = event.get("text", "")
-            user = event.get("user", "")
-            channel = event.get("channel", "")
+                # TODO Phase 3: Call expert_api service with the query
+                # TODO Phase 4: Format response for Slack
+                # TODO Phase 5: Send response back to Slack
 
-            logger.info(f"Message from user {user} in channel {channel}: {text}")
+                return SlackEventsResponse(
+                    ok=True,
+                    message=f"Found expert query for: {', '.join(expert_query.skills)}",
+                )
+            else:
+                logger.info("No expert query extracted from event")
+                return SlackEventsResponse(
+                    ok=True, message="Event processed, no action needed"
+                )
 
-            # TODO: Process the message and call expert_api
-            # This will be implemented in Phase 2
+        except Exception as e:
+            logger.error(f"Error processing Slack event: {e}", exc_info=True)
+            return SlackEventsResponse(ok=False, message="Error processing event")
 
     return SlackEventsResponse(ok=True, message="Event processed")
 
@@ -97,6 +116,55 @@ async def slack_events(payload: SlackEventsRequest):
 async def ask(_: AskRequest) -> AskResponse:
     """Manual ask endpoint for testing"""
     return AskResponse(ok=True, answer="example response")
+
+
+@app.get("/debug/stats")
+async def debug_stats():
+    """Debug endpoint to show processing statistics"""
+    stats = event_processor.get_processing_stats()
+    return {
+        "service": "Truffle Slack Bot",
+        "processing_stats": stats,
+        "supported_skills_sample": event_processor.query_parser.get_supported_skills()[
+            :20
+        ],
+    }
+
+
+@app.post("/debug/parse")
+async def debug_parse_query(request: dict):
+    """Debug endpoint to test query parsing"""
+    text = request.get("text", "")
+    if not text:
+        return {"error": "No text provided"}
+
+    # Create a mock parsed message for testing
+    from models.slack_models import ParsedSlackMessage
+
+    mock_message = ParsedSlackMessage(
+        text=text,
+        cleaned_text=text,  # In real usage this would be cleaned
+        user_id="U123TEST",
+        channel_id="C123TEST",
+        timestamp="123456789",
+        is_question=True,
+        is_app_mention=True,
+    )
+
+    # Parse the query
+    expert_query = event_processor.query_parser.parse_query(mock_message)
+
+    if expert_query:
+        return {
+            "input": text,
+            "extracted_query": {
+                "skills": expert_query.skills,
+                "query_type": expert_query.query_type,
+                "confidence": expert_query.confidence,
+            },
+        }
+    else:
+        return {"input": text, "result": "No expert query found"}
 
 
 if __name__ == "__main__":
