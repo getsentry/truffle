@@ -224,7 +224,7 @@ async def get_worker_stats():
     """Get worker statistics"""
     return {
         "workers": worker_manager.get_worker_stats(),
-        "manager_running": worker_manager.is_running()
+        "manager_running": worker_manager.is_running(),
     }
 
 
@@ -238,6 +238,7 @@ async def clear_completed_tasks():
 # Pydantic models for expert search API
 class ExpertSearchRequest(BaseModel):
     """Request model for expert search"""
+
     query: str
     min_confidence: float = 0.3
     min_evidence_count: int = 1
@@ -251,6 +252,7 @@ class ExpertSearchRequest(BaseModel):
 
 class MultiSkillSearchRequest(BaseModel):
     """Request model for multi-skill expert search"""
+
     skills: list[str]
     operator: str = "OR"  # AND, OR
     min_confidence: float = 0.3
@@ -269,7 +271,7 @@ async def get_experts_by_skill_key(
     time_window_days: int = Query(180, ge=0),
     include_negative: bool = Query(False),
     sort_by: str = Query("score", regex="^(score|recent|evidence_count|alphabetical)$"),
-    limit: int = Query(10, ge=1, le=100)
+    limit: int = Query(10, ge=1, le=100),
 ):
     """Get experts for a specific skill by skill key"""
     try:
@@ -279,10 +281,12 @@ async def get_experts_by_skill_key(
             time_window_days=time_window_days,
             include_negative=include_negative,
             sort_by=SortBy(sort_by),
-            limit=limit
+            limit=limit,
         )
 
-        experts = await expert_search_service.search_experts_by_skill_key(skill_key, query)
+        experts = await expert_search_service.search_experts_by_skill_key(
+            skill_key, query
+        )
 
         return {
             "skill_key": skill_key,
@@ -292,8 +296,8 @@ async def get_experts_by_skill_key(
                 "min_confidence": min_confidence,
                 "min_evidence_count": min_evidence_count,
                 "time_window_days": time_window_days,
-                "sort_by": sort_by
-            }
+                "sort_by": sort_by,
+            },
         }
     except Exception as e:
         logger.error(f"Error searching experts by skill key {skill_key}: {e}")
@@ -312,20 +316,24 @@ async def search_experts(request: ExpertSearchRequest):
             exclude_neutral=request.exclude_neutral,
             sort_by=SortBy(request.sort_by),
             limit=request.limit,
-            offset=request.offset
+            offset=request.offset,
         )
 
         # Try multiple search strategies
         experts = []
 
         # 1. Try exact skill name match first
-        name_experts = await expert_search_service.search_experts_by_skill_name(request.query, query)
+        name_experts = await expert_search_service.search_experts_by_skill_name(
+            request.query, query
+        )
         if name_experts:
             experts.extend(name_experts)
 
         # 2. If no exact matches, try fuzzy search
         if not experts:
-            fuzzy_experts = await expert_search_service.search_experts_fuzzy(request.query, query)
+            fuzzy_experts = await expert_search_service.search_experts_fuzzy(
+                request.query, query
+            )
             experts.extend(fuzzy_experts)
 
         # Remove duplicates (by slack_id + skill_key combination)
@@ -341,8 +349,8 @@ async def search_experts(request: ExpertSearchRequest):
             "query": request.query,
             "search_strategy": "name_match" if name_experts else "fuzzy_match",
             "total_found": len(unique_experts),
-            "results": [expert.to_dict() for expert in unique_experts[:request.limit]],
-            "query_params": request.dict()
+            "results": [expert.to_dict() for expert in unique_experts[: request.limit]],
+            "query_params": request.dict(),
         }
     except Exception as e:
         logger.error(f"Error in expert search: {e}")
@@ -354,14 +362,17 @@ async def search_experts_multi_skill(request: MultiSkillSearchRequest):
     """Search experts who know multiple skills"""
     try:
         if not request.skills:
-            raise HTTPException(status_code=400, detail="At least one skill must be provided")
+            raise HTTPException(
+                status_code=400, detail="At least one skill must be provided"
+            )
 
         query = ExpertQuery(
             min_confidence=request.min_confidence,
             min_evidence_count=request.min_evidence_count,
             time_window_days=request.time_window_days,
             sort_by=SortBy(request.sort_by),
-            limit=request.limit * len(request.skills)  # Get more results for combination
+            limit=request.limit
+            * len(request.skills),  # Get more results for combination
         )
 
         # Search for each skill
@@ -369,7 +380,9 @@ async def search_experts_multi_skill(request: MultiSkillSearchRequest):
 
         for skill in request.skills:
             # Try fuzzy search for each skill
-            skill_experts = await expert_search_service.search_experts_fuzzy(skill, query)
+            skill_experts = await expert_search_service.search_experts_fuzzy(
+                skill, query
+            )
 
             for expert in skill_experts:
                 if expert.slack_id not in all_results:
@@ -383,7 +396,9 @@ async def search_experts_multi_skill(request: MultiSkillSearchRequest):
             for slack_id, skills_dict in all_results.items():
                 if len(skills_dict) >= len(request.skills):
                     # Calculate combined score (average)
-                    total_score = sum(expert.expertise_score for expert in skills_dict.values())
+                    total_score = sum(
+                        expert.expertise_score for expert in skills_dict.values()
+                    )
                     avg_score = total_score / len(skills_dict)
 
                     # Use the first expert as template, update with combined info
@@ -394,7 +409,7 @@ async def search_experts_multi_skill(request: MultiSkillSearchRequest):
 
             # Sort by combined score
             multi_skill_experts.sort(key=lambda x: x.expertise_score, reverse=True)
-            final_results = multi_skill_experts[:request.limit]
+            final_results = multi_skill_experts[: request.limit]
         else:
             # OR logic - user has expertise in ANY skill
             all_experts = []
@@ -403,14 +418,14 @@ async def search_experts_multi_skill(request: MultiSkillSearchRequest):
 
             # Sort and limit
             all_experts.sort(key=lambda x: x.expertise_score, reverse=True)
-            final_results = all_experts[:request.limit]
+            final_results = all_experts[: request.limit]
 
         return {
             "skills": request.skills,
             "operator": request.operator,
             "total_found": len(final_results),
             "results": [expert.to_dict() for expert in final_results],
-            "query_params": request.dict()
+            "query_params": request.dict(),
         }
     except Exception as e:
         logger.error(f"Error in multi-skill search: {e}")
@@ -419,16 +434,12 @@ async def search_experts_multi_skill(request: MultiSkillSearchRequest):
 
 @app.get("/skills/suggest")
 async def suggest_skills(
-    q: str = Query(..., min_length=1),
-    limit: int = Query(10, ge=1, le=50)
+    q: str = Query(..., min_length=1), limit: int = Query(10, ge=1, le=50)
 ):
     """Get skill suggestions for autocomplete"""
     try:
         suggestions = await expert_search_service.get_skill_suggestions(q, limit)
-        return {
-            "query": q,
-            "suggestions": suggestions
-        }
+        return {"query": q, "suggestions": suggestions}
     except Exception as e:
         logger.error(f"Error getting skill suggestions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -437,11 +448,14 @@ async def suggest_skills(
 if __name__ == "__main__":
     import uvicorn
 
-    logger.info(f"Starting Ingestor Service on {settings.ingestor_host}:{settings.ingestor_port}")
+    logger.info(
+        "Starting Ingestor Service on "
+        f"{settings.ingestor_host}:{settings.ingestor_port}"
+    )
     uvicorn.run(
         "main:app",
         host=settings.ingestor_host,
         port=settings.ingestor_port,
         reload=True,
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )

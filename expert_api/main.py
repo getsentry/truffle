@@ -65,7 +65,10 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
 
-    logger.info(f"Starting Expert API on {settings.expert_api_host}:{settings.expert_api_port}")
+    logger.info(
+        "Starting Expert API on "
+        f"{settings.expert_api_host}:{settings.expert_api_port}"
+    )
     uvicorn.run(
         "main:app",
         host=settings.expert_api_host,
