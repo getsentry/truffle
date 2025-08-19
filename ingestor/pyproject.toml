@@ -4,18 +4,22 @@ version = "0"
 requires-python = ">=3.13"
 
 dependencies = [
-    "aiohttp>=3.9",
+    "aiohttp>=3.9",                # Used by slack-sdk async client
     "apscheduler>=3.10.4",
     "asyncpg>=0.29.0",
     "fastapi>=0.104.0",
-    "ipdb>=0.13.13",
     "openai>=1.40.0",
-    "pudb>=2025.1",
     "pydantic-settings>=2.1.0",
-    "ruff>=0.12.9",
     "slack-sdk>=3.36.0",
     "sqlalchemy[asyncio]>=2.0.23",
     "uvicorn[standard]>=0.24.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipdb>=0.13.13", # Interactive Python debugger
+    "pudb>=2025.1",  # Full-screen console debugger
+    "ruff>=0.12.9",  # Fast Python linter and formatter
 ]
 
 [tool.ruff]

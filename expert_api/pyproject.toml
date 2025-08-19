@@ -10,6 +10,13 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
 ]
 
+[tool.uv]
+dev-dependencies = [
+    "ipdb>=0.13.13", # Interactive Python debugger
+    "pudb>=2025.1",  # Full-screen console debugger
+    "ruff>=0.12.9",  # Fast Python linter and formatter
+]
+
 [tool.ruff]
 line-length = 88
 target-version = "py313"

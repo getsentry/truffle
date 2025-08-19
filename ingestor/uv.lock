@@ -333,14 +333,18 @@ dependencies = [
     { name = "apscheduler" },
     { name = "asyncpg" },
     { name = "fastapi" },
-    { name = "ipdb" },
     { name = "openai" },
-    { name = "pudb" },
     { name = "pydantic-settings" },
-    { name = "ruff" },
     { name = "slack-sdk" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ipdb" },
+    { name = "pudb" },
+    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -349,14 +353,18 @@ requires-dist = [
     { name = "apscheduler", specifier = ">=3.10.4" },
     { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "fastapi", specifier = ">=0.104.0" },
-    { name = "ipdb", specifier = ">=0.13.13" },
     { name = "openai", specifier = ">=1.40.0" },
-    { name = "pudb", specifier = ">=2025.1" },
     { name = "pydantic-settings", specifier = ">=2.1.0" },
-    { name = "ruff", specifier = ">=0.12.9" },
     { name = "slack-sdk", specifier = ">=3.36.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.23" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ipdb", specifier = ">=0.13.13" },
+    { name = "pudb", specifier = ">=2025.1" },
+    { name = "ruff", specifier = ">=0.12.9" },
 ]
 
 [[package]]
