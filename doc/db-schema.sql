@@ -9,8 +9,9 @@ CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,           -- Internal integer ID
     slack_id TEXT NOT NULL UNIQUE,        -- Slack user ID (e.g., "U1234567890") for @mentions
     display_name TEXT NOT NULL,           -- For UI display
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timezone TEXT,                        -- User's timezone (e.g., "America/New_York")
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Skills with embeddings for semantic search
@@ -20,8 +21,8 @@ CREATE TABLE skills (
     name TEXT NOT NULL,                   -- e.g., "React", "Dynamic Sampling"
     domain TEXT NOT NULL,                 -- e.g., "engineering", "sentry"
     embedding vector(1536),               -- For "who knows dynamic sampling" queries
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Expertise evidence (no message content!)
@@ -31,10 +32,10 @@ CREATE TABLE expertise_evidence (
     skill_id INTEGER NOT NULL,
     label TEXT NOT NULL,                  -- positive_expertise|negative_expertise|neutral
     confidence REAL NOT NULL,
-    evidence_date DATE NOT NULL,          -- Just the date, not full timestamp
+    evidence_date DATE NOT NULL,          -- Just the date, timezone-agnostic
     message_hash TEXT,                    -- Optional: for deduplication only
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (skill_id) REFERENCES skills(skill_id)
 );
@@ -46,8 +47,8 @@ CREATE TABLE user_skill_scores (
     score REAL NOT NULL,
     evidence_count INTEGER NOT NULL,
     last_evidence_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (user_id, skill_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (skill_id) REFERENCES skills(skill_id)
@@ -65,7 +66,7 @@ CREATE INDEX idx_skills_key ON skills(skill_key);
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
 $$ language 'plpgsql';
