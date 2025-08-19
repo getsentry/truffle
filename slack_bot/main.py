@@ -1,6 +1,7 @@
 """Slack Bot Service - Expert search integration for Slack"""
 
 import logging
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI
@@ -15,7 +16,7 @@ from models import (
     SlackEventsRequest,
     SlackEventsResponse,
 )
-from services import EventProcessor
+from services import EventProcessor, ExpertAPIClient
 
 # Configure logging
 logging.basicConfig(
@@ -24,15 +25,41 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize event processor
+# Initialize services
 # TODO: Get bot_user_id from Slack API or config
 event_processor = EventProcessor(bot_user_id=None)
+expert_api_client = ExpertAPIClient(base_url=settings.expert_api_url)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan manager for startup/shutdown tasks"""
+
+    # Startup: Initialize services and check API availability
+    logger.info("Starting up Slack Bot service...")
+
+    # Check Expert API availability
+    try:
+        if await expert_api_client.is_available():
+            logger.info("✅ Expert API is available")
+        else:
+            logger.warning("⚠️ Expert API is not responding")
+    except Exception as e:
+        logger.error(f"❌ Failed to check Expert API: {e}")
+
+    yield
+
+    # Shutdown: Cleanup resources
+    logger.info("Shutting down Slack Bot service...")
+    await expert_api_client.close()
+
 
 # Create FastAPI app
 app = FastAPI(
     title="Truffle Slack Bot",
     description="Slack bot for expert search and team knowledge discovery",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware for cross-service communication
@@ -91,14 +118,46 @@ async def slack_events(payload: SlackEventsRequest):
                     f"for skills: {expert_query.skills}"
                 )
 
-                # TODO Phase 3: Call expert_api service with the query
-                # TODO Phase 4: Format response for Slack
-                # TODO Phase 5: Send response back to Slack
+                try:
+                    # Call Expert API to find experts
+                    search_response = await expert_api_client.search_experts(
+                        skills=expert_query.skills,
+                        limit=5,  # Limit results for Slack
+                        min_confidence=0.7,  # Only high-confidence matches
+                    )
 
-                return SlackEventsResponse(
-                    ok=True,
-                    message=f"Found expert query for: {', '.join(expert_query.skills)}",
-                )
+                    if search_response.results:
+                        expert_names = [
+                            result.display_name or result.user_name or result.user_id
+                            for result in search_response.results
+                        ]
+
+                        response_message = (
+                            f"Found {len(search_response.results)} experts for "
+                            f"{', '.join(expert_query.skills)}: "
+                            f"{', '.join(expert_names[:3])}"
+                        )
+
+                        if len(expert_names) > 3:
+                            response_message += f" and {len(expert_names) - 3} more"
+
+                        # TODO Phase 4: Enhanced formatting and Slack message sending
+
+                        return SlackEventsResponse(ok=True, message=response_message)
+                    else:
+                        skills_text = ", ".join(expert_query.skills)
+                        return SlackEventsResponse(
+                            ok=True,
+                            message=f"No experts found for {skills_text}",
+                        )
+
+                except Exception as api_error:
+                    logger.error(f"Expert API call failed: {api_error}")
+                    error_message = (
+                        "Sorry, I couldn't search for experts right now. "
+                        "Please try again later."
+                    )
+                    return SlackEventsResponse(ok=True, message=error_message)
             else:
                 logger.info("No expert query extracted from event")
                 return SlackEventsResponse(
@@ -122,9 +181,21 @@ async def ask(_: AskRequest) -> AskResponse:
 async def debug_stats():
     """Debug endpoint to show processing statistics"""
     stats = event_processor.get_processing_stats()
+
+    # Check Expert API status
+    expert_api_status = "unknown"
+    try:
+        expert_api_status = (
+            "available" if await expert_api_client.is_available() else "unavailable"
+        )
+    except Exception:
+        expert_api_status = "error"
+
     return {
         "service": "Truffle Slack Bot",
         "processing_stats": stats,
+        "expert_api_status": expert_api_status,
+        "expert_api_url": settings.expert_api_url,
         "supported_skills_sample": event_processor.query_parser.get_supported_skills()[
             :20
         ],
@@ -165,6 +236,41 @@ async def debug_parse_query(request: dict):
         }
     else:
         return {"input": text, "result": "No expert query found"}
+
+
+@app.post("/debug/expert-search")
+async def debug_expert_search(request: dict):
+    """Debug endpoint to test Expert API search"""
+    skills = request.get("skills", [])
+    if not skills:
+        return {"error": "No skills provided"}
+
+    try:
+        search_response = await expert_api_client.search_experts(
+            skills=skills, limit=10, min_confidence=0.0
+        )
+
+        return {
+            "query": {"skills": skills},
+            "results": [
+                {
+                    "user_id": result.user_id,
+                    "display_name": result.display_name,
+                    "skills": result.skills,
+                    "confidence": result.confidence_score,
+                    "evidence_count": result.evidence_count,
+                }
+                for result in search_response.results
+            ],
+            "total_found": search_response.total_found,
+            "processing_time_ms": search_response.processing_time_ms,
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Expert API search failed: {str(e)}",
+            "query": {"skills": skills},
+        }
 
 
 if __name__ == "__main__":
