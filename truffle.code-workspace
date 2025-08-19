@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "ingestor"
+		},
+		{
+			"path": "expert-api"
 		}
 	],
 	"settings": {}
