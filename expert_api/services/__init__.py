@@ -1,4 +1,7 @@
 """Services module for Expert API"""
 
-# This will contain the expert search service
-# that will be moved from ingestor
+from .storage_service import StorageService
+
+__all__ = [
+    "StorageService",
+]

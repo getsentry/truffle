@@ -1,5 +1,6 @@
 """Expert API Service - Fast, dedicated expert search API"""
 
+import json
 import logging
 from datetime import datetime
 
@@ -15,6 +16,7 @@ from models import (
     SkillsResponse,
     SkillInfo,
 )
+from services import StorageService
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +24,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Initialize storage service
+storage_service = StorageService()
 
 # Create FastAPI app
 app = FastAPI(
@@ -59,13 +64,15 @@ async def root():
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint"""
+    health_data = await storage_service.health_check()
+
     return HealthResponse(
-        status="healthy",
+        status="healthy" if health_data["database_connected"] else "unhealthy",
         service="expert_api",
         timestamp=datetime.utcnow().isoformat(),
-        database_connected=False,  # TODO: Check actual database connection
-        total_experts=0,  # TODO: Get from database
-        total_skills=0,   # TODO: Get from database
+        database_connected=health_data["database_connected"],
+        total_experts=health_data["total_users"],
+        total_skills=health_data["total_skills"],
     )
 
 
@@ -136,26 +143,49 @@ async def search_experts(request: SkillSearchRequest):
 
 @app.get("/skills", response_model=SkillsResponse)
 async def list_skills():
-    """List all available skills"""
+    """List all available skills from database"""
+    try:
+        # Get skills from database
+        db_skills = await storage_service.get_all_skills()
 
-    # TODO: Replace with actual database query
-    mock_skills = [
-        SkillInfo(key="python", name="Python", category="programming"),
-        SkillInfo(key="react", name="React", category="frontend"),
-        SkillInfo(key="kubernetes", name="Kubernetes", category="devops"),
-        SkillInfo(key="docker", name="Docker", category="devops"),
-        SkillInfo(key="typescript", name="TypeScript", category="programming"),
-        SkillInfo(key="django", name="Django", category="backend"),
-        SkillInfo(key="fastapi", name="FastAPI", category="backend"),
-    ]
+        # Convert to API models
+        skills = []
+        for db_skill in db_skills:
+            # Parse aliases from JSON string
+            aliases = []
+            if db_skill.aliases:
+                try:
+                    aliases = json.loads(db_skill.aliases)
+                except (json.JSONDecodeError, TypeError):
+                    aliases = []
 
-    categories = list(set(skill.category for skill in mock_skills if skill.category))
+            skills.append(SkillInfo(
+                key=db_skill.skill_key,
+                name=db_skill.name,
+                category=db_skill.domain,
+                aliases=aliases,
+                expert_count=0  # TODO: Calculate from expertise evidence
+            ))
 
-    return SkillsResponse(
-        skills=mock_skills,
-        total_count=len(mock_skills),
-        categories=sorted(categories)
-    )
+        # Get unique categories
+        categories = list(set(skill.category for skill in skills if skill.category))
+
+        logger.info(f"Retrieved {len(skills)} skills from database")
+
+        return SkillsResponse(
+            skills=skills,
+            total_count=len(skills),
+            categories=sorted(categories)
+        )
+
+    except Exception as e:
+        logger.error(f"Error retrieving skills from database: {e}")
+        # Return empty response on error
+        return SkillsResponse(
+            skills=[],
+            total_count=0,
+            categories=[]
+        )
 
 
 if __name__ == "__main__":
