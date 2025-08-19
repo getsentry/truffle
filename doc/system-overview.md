@@ -72,7 +72,7 @@ export EXTRACT_SKILLS=1                # enable skill matching
 export CLASSIFY_EXPERTISE=1            # enable LLM classification
 export OPENAI_API_KEY=...              # required with classification
 cd truffle/ingest_slack
-uv run python main.py
+./run.sh
 ```
 
 ## Current outputs
@@ -86,8 +86,6 @@ uv run python main.py
 - No persistence yet (evidence or scores are not stored); only console output.
 - No aggregation/scoring of users by skill; not exposed via Slack bot commands.
 - No batching/caching for classifier requests (MVP sends one message at a time).
-- Heuristics like answer-likeness, code block detection, or reactions are not yet scored.
-- Private channels/DMs are not included.
 
 ## Key files (paths relative to workspace root)
 - `truffle/ingest_slack/main.py`
