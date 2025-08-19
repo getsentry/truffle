@@ -125,7 +125,7 @@ class MessageProcessor:
             )
 
             logger.debug(f"Classifying message for skills: {skill_keys}")
-            evaluations = classify_messages([candidate])
+            evaluations = await classify_messages([candidate])
 
             # Store evidence in database
             if evaluations and evaluations[0].results:

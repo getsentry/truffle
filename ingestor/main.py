@@ -11,8 +11,10 @@ from config import settings
 from database import create_tables
 from schedulers.slack_ingestion import run_slack_ingestion
 from scripts.import_taxonomy import import_taxonomy_files
+from services.queue_service import get_queue_service
 from services.skill_service import SkillService
 from services.storage_service import StorageService
+from workers import get_worker_manager
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +24,10 @@ logger = logging.getLogger(__name__)
 
 # Global scheduler
 scheduler = AsyncIOScheduler()
+
+# Global queue service and worker manager
+queue_service = get_queue_service()
+worker_manager = get_worker_manager(queue_service, num_workers=3)
 
 
 async def auto_import_skills():
@@ -70,9 +76,16 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     logger.info(f"Scheduler started with cron: {settings.ingestion_cron}")
 
+    # Start background workers for message processing
+    await worker_manager.start_workers()
+    logger.info("Background workers started")
+
     yield
 
-    # Shutdown: Stop the scheduler
+    # Shutdown: Stop workers and scheduler
+    await worker_manager.stop_workers()
+    logger.info("Background workers stopped")
+
     scheduler.shutdown(wait=True)
     logger.info("Scheduler stopped")
 
@@ -88,10 +101,13 @@ app = FastAPI(
 @app.get("/")
 async def root():
     """Root endpoint with service status"""
+    queue_stats = await queue_service.get_queue_stats()
     return {
         "service": "Truffle Slack Ingestion",
         "status": "running",
         "scheduler_active": scheduler.running if scheduler else False,
+        "workers_active": worker_manager.is_running(),
+        "queue_stats": queue_stats,
         "timestamp": datetime.utcnow().isoformat(),
     }
 
@@ -183,6 +199,35 @@ async def import_skills(validate_only: bool = False):
 
     except Exception as e:
         return {"error": str(e)}
+
+
+# Queue monitoring endpoints
+@app.get("/queue/stats")
+async def get_queue_stats():
+    """Get current queue statistics"""
+    return await queue_service.get_queue_stats()
+
+
+@app.get("/queue/tasks")
+async def get_recent_tasks(limit: int = 50):
+    """Get recent tasks for monitoring"""
+    return {"tasks": await queue_service.get_recent_tasks(limit)}
+
+
+@app.get("/workers/stats")
+async def get_worker_stats():
+    """Get worker statistics"""
+    return {
+        "workers": worker_manager.get_worker_stats(),
+        "manager_running": worker_manager.is_running()
+    }
+
+
+@app.post("/queue/clear-completed")
+async def clear_completed_tasks():
+    """Clear completed tasks to free memory"""
+    count = await queue_service.clear_completed_tasks()
+    return {"message": f"Cleared {count} completed tasks"}
 
 
 if __name__ == "__main__":

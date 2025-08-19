@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
-from processors.message_processor import MessageProcessor
+from services.queue_service import get_queue_service
 from services.slack_service import SlackService
 from services.storage_service import StorageService
 
@@ -20,8 +20,8 @@ async def run_slack_ingestion():
 
     try:
         slack_service = SlackService()
-        processor = MessageProcessor()
         storage = StorageService()
+        queue_service = get_queue_service()
 
         # Check if this is first run (empty database)
         is_first_run = await storage.is_database_empty()
@@ -41,11 +41,11 @@ async def run_slack_ingestion():
         await storage.upsert_users(users)
         logger.info("Updated users in database")
 
-        messages_processed = 0
+        messages_enqueued = 0
 
-        # Process messages from each channel
+        # Enqueue messages from each channel for background processing
         for channel in channels:
-            logger.info(f"Processing channel: {channel['name']}")
+            logger.info(f"Enqueuing messages from channel: {channel['name']}")
 
             try:
                 # Get messages since last run (or longer window for first run)
@@ -59,21 +59,24 @@ async def run_slack_ingestion():
                             message["text"], users
                         )
 
-                    # Process message through pipeline
-                    await processor.process_message(message, channel, users)
-                    messages_processed += 1
+                    # Enqueue message for background processing
+                    await queue_service.enqueue_message(message, channel, users)
+                    messages_enqueued += 1
 
-                    # Add small delay to avoid overwhelming the classifier
-                    if messages_processed % 10 == 0:
-                        await asyncio.sleep(0.1)
+                    # Small batch processing - enqueue in batches to avoid overwhelming
+                    if messages_enqueued % 100 == 0:
+                        logger.info(f"Enqueued {messages_enqueued} messages so far...")
+                        await asyncio.sleep(0.1)  # Brief pause between batches
 
             except Exception as e:
-                logger.error(f"Error processing channel {channel['name']}: {e}")
+                logger.error(f"Error enqueuing messages from channel {channel['name']}: {e}")
                 continue  # Continue with next channel
 
         duration = (datetime.now(UTC) - start_time).total_seconds()
+        queue_stats = await queue_service.get_queue_stats()
         logger.info(
-            f"Ingestion completed: {messages_processed} messages in {duration:.2f}s"
+            f"Ingestion completed: {messages_enqueued} messages enqueued in {duration:.2f}s. "
+            f"Queue stats: {queue_stats}"
         )
 
     except Exception as e:

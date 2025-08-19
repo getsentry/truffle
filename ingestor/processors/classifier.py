@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from dataclasses import dataclass
@@ -69,7 +70,7 @@ def _build_user_prompt(candidate: MessageCandidate) -> str:
     )
 
 
-def classify_messages(
+async def classify_messages(
     candidates: list[MessageCandidate],
     *,
     model: str | None = None,
@@ -94,7 +95,9 @@ def classify_messages(
             {"role": "user", "content": _build_user_prompt(candidate)},
         ]
 
-        resp = client.chat.completions.create(  # type: ignore[call-arg]
+        # Run the OpenAI API call in a thread pool to avoid blocking
+        resp = await asyncio.to_thread(
+            client.chat.completions.create,  # type: ignore[call-arg]
             model=use_model,
             messages=messages,  # type: ignore[arg-type]
             temperature=0.0,
