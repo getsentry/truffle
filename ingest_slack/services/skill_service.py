@@ -1,7 +1,7 @@
 import json
 
+from processors.skill_matcher import Skill, SkillMatcher
 from services.storage_service import StorageService
-from taxonomy import Skill, SkillMatcher
 
 
 class SkillService:
