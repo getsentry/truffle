@@ -8,6 +8,10 @@ from services.storage_service import StorageService
 
 logger = logging.getLogger(__name__)
 
+# Configuration constants
+FIRST_RUN_HOURS = 24 * 30  # 30 days for initial historical import
+PERIODIC_RUN_HOURS = 1     # 1 hour for regular periodic runs
+
 
 async def run_slack_ingestion():
     """Main ingestion task - runs periodically"""
@@ -18,6 +22,13 @@ async def run_slack_ingestion():
         slack_service = SlackService()
         processor = MessageProcessor()
         storage = StorageService()
+
+        # Check if this is first run (empty database)
+        is_first_run = await storage.is_database_empty()
+        since_hours = FIRST_RUN_HOURS if is_first_run else PERIODIC_RUN_HOURS
+
+        logger.info(f"{'First run' if is_first_run else 'Periodic run'} - "
+                   f"fetching messages from last {since_hours} hours")
 
         # Get channels and users
         logger.info("Fetching channels and users from Slack...")
@@ -37,10 +48,10 @@ async def run_slack_ingestion():
             logger.info(f"Processing channel: {channel['name']}")
 
             try:
-                # Get messages since last run (or last 1 hour for periodic runs)
+                # Get messages since last run (or longer window for first run)
                 async for message in slack_service.get_recent_messages(
                     channel["id"],
-                    since_hours=1,  # Only new messages from last hour
+                    since_hours=since_hours,
                 ):
                     # Replace user mentions for better text processing
                     if message.get("text"):

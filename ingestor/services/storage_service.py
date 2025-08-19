@@ -12,6 +12,14 @@ class StorageService:
     def __init__(self):
         pass
 
+    async def is_database_empty(self) -> bool:
+        """Check if database is empty (no expertise evidence exists)"""
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ExpertiseEvidence).limit(1)
+            )
+            return result.scalar_one_or_none() is None
+
     async def upsert_users(self, users_data: dict[str, dict[str, Any]]):
         """Insert or update users from Slack data"""
         async with AsyncSessionLocal() as session:
@@ -139,6 +147,7 @@ class StorageService:
         async with AsyncSessionLocal() as session:
             # This would implement the query-time decay calculation
             # For now, return a simple query
+            # Simplified query without time decay for now (can add back later)
             query = """
             SELECT
                 u.display_name,
@@ -149,8 +158,7 @@ class StorageService:
                         WHEN ee.label = 'positive_expertise' THEN ee.confidence
                         WHEN ee.label = 'negative_expertise' THEN -ee.confidence * 0.5
                         ELSE 0
-                    END *
-                    POWER(0.95, EXTRACT(DAYS FROM (CURRENT_DATE - ee.evidence_date)))
+                    END
                 ) as expertise_score,
                 COUNT(*) as evidence_count
             FROM expertise_evidence ee
@@ -164,8 +172,7 @@ class StorageService:
                     WHEN ee.label = 'positive_expertise' THEN ee.confidence
                     WHEN ee.label = 'negative_expertise' THEN -ee.confidence * 0.5
                     ELSE 0
-                END *
-                POWER(0.95, EXTRACT(DAYS FROM (CURRENT_DATE - ee.evidence_date)))
+                END
             ) > 0.1
             ORDER BY expertise_score DESC
             LIMIT :limit
