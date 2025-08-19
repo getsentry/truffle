@@ -325,7 +325,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ingest-slack"
+name = "ingestor"
 version = "0"
 source = { virtual = "." }
 dependencies = [

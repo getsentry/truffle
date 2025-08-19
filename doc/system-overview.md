@@ -8,7 +8,7 @@ Identify who knows what inside Slack by:
 - Classifying whether a message demonstrates the author’s expertise for each matched skill
 
 ## Components
-- ingest_slack
+- ingestor
   - `main.py`: pulls channels, users, and public channel messages (incl. thread replies); prints enriched output.
   - `taxonomy.py`: hard-coded taxonomy covering engineering (incl. Sentry JS guides, Python integrations), SaaS business topics, and Sentry product topics. Provides `SkillMatcher`.
   - `classifier.py`: GPT-4o-based expertise classifier with strict JSON output.
@@ -71,7 +71,7 @@ export SLACK_BOT_AUTH_TOKEN=...        # required
 export EXTRACT_SKILLS=1                # enable skill matching
 export CLASSIFY_EXPERTISE=1            # enable LLM classification
 export OPENAI_API_KEY=...              # required with classification
-cd truffle/ingest_slack
+cd truffle/ingestor
 ./run.sh
 ```
 
@@ -88,6 +88,6 @@ cd truffle/ingest_slack
 - No batching/caching for classifier requests (MVP sends one message at a time).
 
 ## Key files (paths relative to workspace root)
-- `truffle/ingest_slack/main.py`
-- `truffle/ingest_slack/taxonomy.py`
-- `truffle/ingest_slack/classifier.py`
+- `truffle/ingestor/main.py`
+- `truffle/ingestor/taxonomy.py`
+- `truffle/ingestor/classifier.py`

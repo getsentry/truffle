@@ -7,7 +7,7 @@ Automated Slack message ingestion and expertise extraction service, refactored i
 The service is now organized into modular components:
 
 ```
-ingest_slack/
+ingestor/
 ├── main.py                    # FastAPI app with scheduler
 ├── config.py                  # Configuration management
 ├── database.py                # Database models and connection

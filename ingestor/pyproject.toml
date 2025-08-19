@@ -1,5 +1,5 @@
 [project]
-name = "ingest_slack"
+name = "ingestor"
 version = "0"
 requires-python = ">=3.13"
 
@@ -27,7 +27,7 @@ select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["ingest_slack"]
+known-first-party = ["ingestor"]
 
 [tool.ruff.format]
 quote-style = "double"

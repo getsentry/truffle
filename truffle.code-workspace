@@ -7,7 +7,7 @@
 			"path": "slack_bot"
 		},
 		{
-			"path": "ingest_slack"
+			"path": "ingestor"
 		}
 	],
 	"settings": {}

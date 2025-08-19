@@ -1,5 +1,5 @@
 {
-  "python.defaultInterpreterPath": "/Users/antonpirker/code/truffle/ingest_slack/.venv/bin/python",
+  "python.defaultInterpreterPath": "/Users/antonpirker/code/truffle/ingestor/.venv/bin/python",
   "editor.formatOnSave": true,
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
