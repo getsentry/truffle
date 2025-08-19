@@ -4,6 +4,14 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Configuration settings loaded from environment variables.
+
+    Sources (in priority order):
+    1. Environment variables (e.g., from .envrc via direnv)
+    2. .env file (fallback)
+    3. Default values
+    """
+
     # Database
     database_url: str = os.environ.get(
         "TRUFFLE_DB_URL", "postgresql://user1:pass@localhost/truffle"
