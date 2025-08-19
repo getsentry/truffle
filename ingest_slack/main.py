@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
     # Add periodic ingestion job
     scheduler.add_job(
         run_slack_ingestion,
-        CronTrigger.from_crontab(settings.ingestion_cron),  # Every 15 min
+        CronTrigger.from_crontab(settings.ingestion_cron),
         id="slack_ingestion",
         replace_existing=True,
         max_instances=1,  # Prevent overlapping runs
