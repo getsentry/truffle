@@ -60,7 +60,7 @@ class StorageService:
             return list(result.scalars().all())
 
     async def upsert_skills(self, skills_data: list[dict[str, Any]]):
-        """Insert or update skills from taxonomy"""
+        """Insert or update skills from JSON files"""
         async with AsyncSessionLocal() as session:
             for skill_data in skills_data:
                 stmt = insert(Skill).values(

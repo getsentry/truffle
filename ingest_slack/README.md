@@ -126,7 +126,7 @@ DATABASE_URL="postgresql://..."
 The service creates these tables automatically:
 
 - `users` - Slack workspace users
-- `skills` - Available skills from taxonomy
+- `skills` - Available skills from JSON files
 - `expertise_evidence` - Raw expertise evidence from messages
 - `user_skill_scores` - Pre-computed expertise scores (future)
 
