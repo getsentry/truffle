@@ -2,8 +2,12 @@
 
 import logging
 import re
+from typing import TYPE_CHECKING
 
 from models.slack_models import ExpertQuery, ParsedSlackMessage
+
+if TYPE_CHECKING:
+    from .skill_cache_service import SkillCacheService
 
 logger = logging.getLogger(__name__)
 
@@ -11,127 +15,10 @@ logger = logging.getLogger(__name__)
 class QueryParser:
     """Extracts skills and intent from natural language queries"""
 
-    def __init__(self):
-        # Common programming languages and technologies
-        self.tech_skills = {
-            # Programming languages
-            "python",
-            "javascript",
-            "typescript",
-            "java",
-            "c++",
-            "c#",
-            "go",
-            "rust",
-            "ruby",
-            "php",
-            "swift",
-            "kotlin",
-            "scala",
-            "clojure",
-            "haskell",
-            "erlang",
-            "r",
-            "matlab",
-            "perl",
-            "lua",
-            "dart",
-            "elixir",
-            "f#",
-            "ocaml",
-            # Web technologies
-            "react",
-            "vue",
-            "angular",
-            "nodejs",
-            "express",
-            "nextjs",
-            "nuxt",
-            "django",
-            "flask",
-            "fastapi",
-            "spring",
-            "laravel",
-            "rails",
-            "html",
-            "css",
-            "sass",
-            "scss",
-            "tailwind",
-            "bootstrap",
-            # Databases
-            "postgresql",
-            "postgres",
-            "mysql",
-            "mongodb",
-            "redis",
-            "sqlite",
-            "oracle",
-            "cassandra",
-            "dynamodb",
-            "elasticsearch",
-            "neo4j",
-            # Cloud & DevOps
-            "aws",
-            "azure",
-            "gcp",
-            "docker",
-            "kubernetes",
-            "terraform",
-            "ansible",
-            "jenkins",
-            "gitlab",
-            "github",
-            "git",
-            "svn",
-            "linux",
-            "ubuntu",
-            "centos",
-            "debian",
-            "macos",
-            "windows",
-            # Data & ML
-            "pandas",
-            "numpy",
-            "pytorch",
-            "tensorflow",
-            "scikit-learn",
-            "jupyter",
-            "spark",
-            "hadoop",
-            "kafka",
-            "airflow",
-            "tableau",
-            "powerbi",
-            "looker",
-            "grafana",
-            # Mobile
-            "ios",
-            "android",
-            "flutter",
-            "react-native",
-            "xamarin",
-            # Testing
-            "pytest",
-            "jest",
-            "cypress",
-            "selenium",
-            "junit",
-            "rspec",
-            # Other tools
-            "vim",
-            "emacs",
-            "vscode",
-            "intellij",
-            "sublime",
-            "atom",
-            "slack",
-            "jira",
-            "confluence",
-            "notion",
-            "figma",
-            "sketch",
-        }
+    def __init__(self, skill_cache_service: "SkillCacheService"):
+        self.skill_cache_service = skill_cache_service
+
+        # Skills are now loaded dynamically from database via skill_cache_service
 
         # Query patterns for different types of expert searches
         self.query_patterns = [
@@ -177,7 +64,7 @@ class QueryParser:
             for pattern, query_type in self.query_patterns
         ]
 
-    def parse_query(self, message: ParsedSlackMessage) -> ExpertQuery | None:
+    async def parse_query(self, message: ParsedSlackMessage) -> ExpertQuery | None:
         """Parse a message and extract an expert search query"""
         try:
             text = message.cleaned_text
@@ -187,7 +74,7 @@ class QueryParser:
                 match = pattern.search(text)
                 if match:
                     skill_text = match.group(1).strip()
-                    skills = self._extract_skills_from_text(skill_text)
+                    skills = await self._extract_skills_from_text(skill_text)
 
                     if skills:
                         confidence = self._calculate_confidence(
@@ -205,12 +92,14 @@ class QueryParser:
                         )
 
                         logger.info(
-                            f"Extracted query: {query_type} for skills {skills} (confidence: {confidence:.2f})"
+                            f"Extracted query: {query_type} for skills {skills} "
+                            f"(confidence: {confidence:.2f})"
                         )
                         return query
 
             # Fallback: try to extract any tech skills mentioned
-            fallback_skills = self._extract_skills_from_text(text)
+            fallback_skills = await self._extract_skills_from_text(text)
+
             if fallback_skills:
                 query = ExpertQuery(
                     original_text=message.text,
@@ -232,26 +121,32 @@ class QueryParser:
             logger.error(f"Error parsing query: {e}")
             return None
 
-    def _extract_skills_from_text(self, text: str) -> list[str]:
-        """Extract technology skills from text"""
+    async def _extract_skills_from_text(self, text: str) -> list[str]:
+        """Extract technology skills from text using database skills"""
         text_lower = text.lower()
 
         # Remove common words that might interfere
-        words_to_remove = ["and", "or", "with", "in", "on", "at", "the", "a", "an"]
+        words_to_remove = {"and", "or", "with", "in", "on", "at", "the", "a", "an"}
+
+        # Get all skill terms from database (names + aliases)
+        all_skill_terms = await self.skill_cache_service.get_all_skill_terms()
 
         # Split text into potential skill tokens
         # Handle both spaces and common separators
         tokens = re.split(r"[,\s/&+\-]+", text_lower)
         tokens = [token.strip() for token in tokens if token.strip()]
 
-        # Find exact matches
+        # Find exact matches against database skills
         found_skills = []
         for token in tokens:
-            if token in self.tech_skills and token not in words_to_remove:
-                found_skills.append(token)
+            if token in all_skill_terms and token not in words_to_remove:
+                # Get the actual skill info to return the canonical name
+                skill_info = await self.skill_cache_service.get_skill_by_term(token)
+                if skill_info and skill_info.key not in found_skills:
+                    found_skills.append(skill_info.key)
 
-        # Look for compound skills (e.g., "machine learning", "data science")
-        compound_skills = self._find_compound_skills(text_lower)
+        # Look for compound/multi-word skills from database
+        compound_skills = await self._find_compound_skills(text_lower)
         found_skills.extend(compound_skills)
 
         # Remove duplicates while preserving order
@@ -262,49 +157,24 @@ class QueryParser:
 
         return unique_skills
 
-    def _find_compound_skills(self, text: str) -> list[str]:
-        """Find compound/multi-word skills"""
-        compound_skills = [
-            "machine learning",
-            "deep learning",
-            "data science",
-            "data analysis",
-            "web development",
-            "mobile development",
-            "game development",
-            "software engineering",
-            "devops",
-            "site reliability",
-            "quality assurance",
-            "product management",
-            "project management",
-            "user experience",
-            "user interface",
-            "computer vision",
-            "natural language processing",
-            "artificial intelligence",
-            "cloud computing",
-            "distributed systems",
-            "microservices",
-            "database design",
-            "system architecture",
-            "api design",
-            "frontend development",
-            "backend development",
-            "full stack",
-            "react native",
-            "node js",
-            "express js",
-            "next js",
-            "spring boot",
-            "ruby on rails",
-            "asp net",
-        ]
-
+    async def _find_compound_skills(self, text: str) -> list[str]:
+        """Find compound/multi-word skills from database"""
         found = []
-        for skill in compound_skills:
-            if skill in text:
-                found.append(skill)
+
+        # Get all skills from database
+        all_skill_terms = await self.skill_cache_service.get_all_skill_terms()
+
+        # Look for multi-word skills (containing spaces)
+        multi_word_skills = [term for term in all_skill_terms if " " in term]
+
+        for skill_term in multi_word_skills:
+            if skill_term in text:
+                # Get the actual skill info to return the canonical key
+                skill_info = await self.skill_cache_service.get_skill_by_term(
+                    skill_term
+                )
+                if skill_info and skill_info.key not in found:
+                    found.append(skill_info.key)
 
         return found
 
@@ -323,10 +193,10 @@ class QueryParser:
         if len(skills) > 1:
             base_confidence += 0.1
 
-        # Boost confidence for exact tech skill matches
-        exact_matches = sum(1 for skill in skills if skill in self.tech_skills)
-        if exact_matches > 0:
-            base_confidence += 0.1 * (exact_matches / len(skills))
+        # Boost confidence for skills found in database
+        # Note: All skills are now from database, so all matches are valid
+        if len(skills) > 0:
+            base_confidence += 0.1
 
         # Reduce confidence for very long skill lists (might be noise)
         if len(skills) > 3:
@@ -338,6 +208,7 @@ class QueryParser:
 
         return min(1.0, base_confidence)
 
-    def get_supported_skills(self) -> list[str]:
+    async def get_supported_skills(self) -> list[str]:
         """Get list of supported skills for validation"""
-        return sorted(list(self.tech_skills))
+        skills = await self.skill_cache_service.get_skills()
+        return [skill.key for skill in skills]

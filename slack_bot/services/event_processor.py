@@ -1,11 +1,14 @@
 """Main event processing service that coordinates Slack event handling"""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from models.slack_models import ExpertQuery
 from services.query_parser import QueryParser
 from services.slack_event_parser import SlackEventParser
+
+if TYPE_CHECKING:
+    from services.skill_cache_service import SkillCacheService
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +16,11 @@ logger = logging.getLogger(__name__)
 class EventProcessor:
     """Coordinates Slack event processing and expert query extraction"""
 
-    def __init__(self, bot_user_id: str | None = None):
+    def __init__(
+        self, skill_cache_service: "SkillCacheService", bot_user_id: str | None = None
+    ):
         self.slack_parser = SlackEventParser(bot_user_id=bot_user_id)
-        self.query_parser = QueryParser()
+        self.query_parser = QueryParser(skill_cache_service)
 
     async def process_slack_event(
         self, event_data: dict[str, Any]
@@ -51,10 +56,11 @@ class EventProcessor:
                         return None
 
                     # Extract expert query from the message
-                    expert_query = self.query_parser.parse_query(parsed_message)
+                    expert_query = await self.query_parser.parse_query(parsed_message)
                     if expert_query:
                         logger.info(
-                            f"Successfully extracted expert query: {expert_query.query_type} for {expert_query.skills}"
+                            f"Successfully extracted expert query: {expert_query.query_type} "
+                            f"for {expert_query.skills}"
                         )
                         return expert_query
                     else:
@@ -70,10 +76,11 @@ class EventProcessor:
             logger.error(f"Error processing Slack event: {e}", exc_info=True)
             return None
 
-    def get_processing_stats(self) -> dict[str, Any]:
+    async def get_processing_stats(self) -> dict[str, Any]:
         """Get statistics about event processing"""
+        skills = await self.query_parser.skill_cache_service.get_skills()
         return {
-            "supported_skills_count": len(self.query_parser.get_supported_skills()),
+            "supported_skills_count": len(skills),
             "query_patterns_count": len(self.query_parser.compiled_patterns),
             "bot_user_id": self.slack_parser.bot_user_id,
         }

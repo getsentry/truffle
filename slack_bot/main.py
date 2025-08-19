@@ -16,7 +16,7 @@ from models import (
     SlackEventsRequest,
     SlackEventsResponse,
 )
-from services import EventProcessor, ExpertAPIClient
+from services import EventProcessor, ExpertAPIClient, SkillCacheService
 
 # Configure logging
 logging.basicConfig(
@@ -25,18 +25,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize services
-# TODO: Get bot_user_id from Slack API or config
-event_processor = EventProcessor(bot_user_id=None)
-expert_api_client = ExpertAPIClient(base_url=settings.expert_api_url)
+# Initialize services (will be set in lifespan)
+expert_api_client: ExpertAPIClient | None = None
+skill_cache_service: SkillCacheService | None = None
+event_processor: EventProcessor | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan manager for startup/shutdown tasks"""
+    global expert_api_client, skill_cache_service, event_processor
 
     # Startup: Initialize services and check API availability
     logger.info("Starting up Slack Bot service...")
+
+    # Initialize Expert API client
+    expert_api_client = ExpertAPIClient(base_url=settings.expert_api_url)
 
     # Check Expert API availability
     try:
@@ -47,11 +51,27 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Failed to check Expert API: {e}")
 
+    # Initialize Skill Cache Service
+    skill_cache_service = SkillCacheService(expert_api_client, cache_ttl_minutes=60)
+
+    # Pre-populate skill cache
+    try:
+        await skill_cache_service.refresh_cache()
+        logger.info("✅ Skill cache initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize skill cache: {e}")
+
+    # Initialize Event Processor with skill cache
+    # TODO: Get bot_user_id from Slack API or config
+    event_processor = EventProcessor(skill_cache_service, bot_user_id=None)
+
+    logger.info("✅ All services initialized successfully")
+
     yield
 
-    # Shutdown: Cleanup resources
+    # Shutdown: Clean up services
     logger.info("Shutting down Slack Bot service...")
-    await expert_api_client.close()
+    # Add any cleanup logic here if needed
 
 
 # Create FastAPI app
@@ -106,6 +126,9 @@ async def slack_events(payload: SlackEventsRequest):
 
     # Handle actual events
     if payload.type == "event_callback":
+        if not event_processor:
+            return SlackEventsResponse(ok=False, message="Service not initialized")
+
         try:
             # Process the event and extract expert query
             expert_query = await event_processor.process_slack_event(
@@ -117,6 +140,11 @@ async def slack_events(payload: SlackEventsRequest):
                     f"Extracted expert query: {expert_query.query_type} "
                     f"for skills: {expert_query.skills}"
                 )
+
+                if not expert_api_client:
+                    return SlackEventsResponse(
+                        ok=False, message="Expert API client not initialized"
+                    )
 
                 try:
                     # Call Expert API to find experts
@@ -180,31 +208,41 @@ async def ask(_: AskRequest) -> AskResponse:
 @app.get("/debug/stats")
 async def debug_stats():
     """Debug endpoint to show processing statistics"""
-    stats = event_processor.get_processing_stats()
+    if not event_processor:
+        return {"error": "Event processor not initialized"}
+
+    stats = await event_processor.get_processing_stats()
 
     # Check Expert API status
     expert_api_status = "unknown"
-    try:
-        expert_api_status = (
-            "available" if await expert_api_client.is_available() else "unavailable"
-        )
-    except Exception:
-        expert_api_status = "error"
+    if expert_api_client:
+        try:
+            expert_api_status = (
+                "available" if await expert_api_client.is_available() else "unavailable"
+            )
+        except Exception:
+            expert_api_status = "error"
+
+    # Get skill cache stats
+    cache_stats = {}
+    if skill_cache_service:
+        cache_stats = skill_cache_service.get_cache_stats()
 
     return {
         "service": "Truffle Slack Bot",
         "processing_stats": stats,
         "expert_api_status": expert_api_status,
         "expert_api_url": settings.expert_api_url,
-        "supported_skills_sample": event_processor.query_parser.get_supported_skills()[
-            :20
-        ],
+        "skill_cache_stats": cache_stats,
     }
 
 
 @app.post("/debug/parse")
 async def debug_parse_query(request: dict):
     """Debug endpoint to test query parsing"""
+    if not event_processor:
+        return {"error": "Event processor not initialized"}
+
     text = request.get("text", "")
     if not text:
         return {"error": "No text provided"}
@@ -223,7 +261,7 @@ async def debug_parse_query(request: dict):
     )
 
     # Parse the query
-    expert_query = event_processor.query_parser.parse_query(mock_message)
+    expert_query = await event_processor.query_parser.parse_query(mock_message)
 
     if expert_query:
         return {
@@ -241,6 +279,9 @@ async def debug_parse_query(request: dict):
 @app.post("/debug/expert-search")
 async def debug_expert_search(request: dict):
     """Debug endpoint to test Expert API search"""
+    if not expert_api_client:
+        return {"error": "Expert API client not initialized"}
+
     skills = request.get("skills", [])
     if not skills:
         return {"error": "No skills provided"}
