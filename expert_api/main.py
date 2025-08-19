@@ -53,7 +53,7 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "service": "expert-api",
+        "service": "expert_api",
         "timestamp": datetime.utcnow().isoformat()
     }
 

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "expert-api"
+name = "expert_api"
 version = "1.0.0"
 requires-python = ">=3.13"
 
@@ -29,7 +29,7 @@ select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["expert-api"]
+known-first-party = ["expert_api"]
 
 [tool.ruff.format]
 quote-style = "double"

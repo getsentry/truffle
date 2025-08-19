@@ -10,7 +10,7 @@
 			"path": "ingestor"
 		},
 		{
-			"path": "expert-api"
+			"path": "expert_api"
 		}
 	],
 	"settings": {}
