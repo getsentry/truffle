@@ -17,11 +17,9 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
-    title="Expert Search API",
+    title="Truffle Expert Search API",
     description="Dedicated service for finding experts by skills and expertise",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
 )
 
 # Add CORS middleware for cross-service communication
@@ -42,7 +40,7 @@ app.add_middleware(
 async def root():
     """Root endpoint - service status"""
     return {
-        "service": "Expert Search API",
+        "service": "Truffle Expert Search API",
         "status": "running",
         "version": "1.0.0",
         "timestamp": datetime.utcnow().isoformat(),

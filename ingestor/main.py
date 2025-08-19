@@ -96,8 +96,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Truffle Slack Ingestion Service",
-    description="Automated Slack message ingestion and expertise extraction",
+    title="Truffle Ingestion Service",
+    description="Automated message ingestion and expertise extraction",
     version="1.0.0",
     lifespan=lifespan,
 )
