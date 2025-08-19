@@ -1,5 +1,3 @@
-"""Database models for Expert API - Read-only access to expertise data"""
-
 from datetime import date, datetime
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, Text
@@ -34,6 +32,7 @@ class Skill(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     domain: Mapped[str] = mapped_column(String, nullable=False)
     aliases: Mapped[str | None] = mapped_column(Text)  # JSON array of aliases
+    # embedding: Mapped[Optional[str]] = mapped_column(Text)  # JSON serialized for now
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -52,37 +51,35 @@ class ExpertiseEvidence(Base):
     skill_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("skills.skill_id"), nullable=False
     )
-    label: Mapped[str] = mapped_column(String, nullable=False)
+    label: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # positive_expertise|negative_expertise|neutral
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     evidence_date: Mapped[date] = mapped_column(Date, nullable=False)
-    message_hash: Mapped[str | None] = mapped_column(String)
+    message_hash: Mapped[str | None] = mapped_column(String)  # For deduplication
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
 
 class UserSkillScore(Base):
     __tablename__ = "user_skill_scores"
 
-    score_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.user_id"), nullable=False
+        Integer, ForeignKey("users.user_id"), primary_key=True
     )
     skill_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("skills.skill_id"), nullable=False
+        Integer, ForeignKey("skills.skill_id"), primary_key=True
     )
     score: Mapped[float] = mapped_column(Float, nullable=False)
-    evidence_count: Mapped[int] = mapped_column(Integer, default=0)
-    last_updated: Mapped[datetime] = mapped_column(
+    evidence_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    last_evidence_date: Mapped[date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-
-
-# Re-export for this module
-__all__ = [
-    "Base",
-    "User",
-    "Skill",
-    "ExpertiseEvidence",
-    "UserSkillScore",
-]
