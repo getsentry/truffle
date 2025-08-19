@@ -1,4 +1,4 @@
-"""Configuration management for Ingestor service""""
+"""Configuration management for Ingestor service"""
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
