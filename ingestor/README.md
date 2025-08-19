@@ -1,10 +1,10 @@
-# Truffle Slack Ingestion Service
+# Truffle Message Ingestion Service
 
-Automated Slack message ingestion and expertise extraction service, refactored into a modular FastAPI-based architecture.
+Automated message ingestion (from Slack) and expertise extraction service.
 
 ## Architecture
 
-The service is now organized into modular components:
+The service is organized into modular components:
 
 ```
 ingestor/
@@ -88,7 +88,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
 The service will:
 - Start a web server on `http://localhost:8001`
-- Automatically run Slack ingestion every 15 minutes
+- Automatically run message ingestion every 15 minutes
 - Create database tables if they don't exist
 
 ### Legacy Script (Backward Compatibility)
