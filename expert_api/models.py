@@ -47,7 +47,7 @@ class SkillInfo(BaseModel):
     key: str
     name: str
     aliases: list[str] = Field(default_factory=list)
-    category: str | None = None
+    domain: str | None = None
     expert_count: int = Field(default=0, ge=0)
 
 
@@ -55,7 +55,7 @@ class SkillsResponse(BaseModel):
     """Response model for skills listing"""
     skills: list[SkillInfo]
     total_count: int = Field(ge=0)
-    categories: list[str] = Field(default_factory=list)
+    domains: list[str] = Field(default_factory=list)
 
 
 class HealthResponse(BaseModel):

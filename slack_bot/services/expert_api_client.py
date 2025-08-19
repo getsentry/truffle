@@ -41,7 +41,7 @@ class SkillInfo(BaseModel):
 
     key: str
     name: str
-    category: str | None = None
+    domain: str | None = None
     expert_count: int = Field(default=0, ge=0)
 
 
@@ -50,7 +50,7 @@ class SkillsResponse(BaseModel):
 
     skills: list[SkillInfo]
     total_count: int = Field(ge=0)
-    categories: list[str] = Field(default_factory=list)
+    domains: list[str] = Field(default_factory=list)
 
 
 class ExpertAPIClient:

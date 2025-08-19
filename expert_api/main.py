@@ -162,20 +162,20 @@ async def list_skills():
             skills.append(SkillInfo(
                 key=db_skill.skill_key,
                 name=db_skill.name,
-                category=db_skill.domain,
+                domain=db_skill.domain,
                 aliases=aliases,
                 expert_count=0  # TODO: Calculate from expertise evidence
             ))
 
-        # Get unique categories
-        categories = list(set(skill.category for skill in skills if skill.category))
+        # Get unique domains
+        domains = list(set(skill.domain for skill in skills if skill.domain))
 
         logger.info(f"Retrieved {len(skills)} skills from database")
 
         return SkillsResponse(
             skills=skills,
             total_count=len(skills),
-            categories=sorted(categories)
+            domains=sorted(domains)
         )
 
     except Exception as e:
@@ -184,7 +184,7 @@ async def list_skills():
         return SkillsResponse(
             skills=[],
             total_count=0,
-            categories=[]
+            domains=[]
         )
 
 
