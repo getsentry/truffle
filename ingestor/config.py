@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     service_name: str = "Truffle Message Ingestion"
     service_version: str = VERSION
 
+    debug: bool = Field(default=False, alias="DEBUG")
+
     # Server configuration
     ingestor_host: str = Field(default="0.0.0.0", alias="INGESTOR_HOST")
     ingestor_port: int = Field(default=8001, alias="INGESTOR_PORT")

@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     service_name: str = "Truffle Expert Search API"
     service_version: str = VERSION
 
+    debug: bool = Field(default=False, alias="DEBUG")
+
     # Server configuration
     expert_api_host: str = Field(default="0.0.0.0", alias="EXPERT_API_HOST")
     expert_api_port: int = Field(default=8002, alias="EXPERT_API_PORT")

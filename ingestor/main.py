@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             traces_sample_rate=1.0,
-            debug=True,
+            debug=settings.debug,
         )
 
     logger.info(

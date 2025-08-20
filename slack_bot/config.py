@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     service_name: str = "Truffle Slack Bot"
     service_version: str = VERSION
 
+    debug: bool = Field(default=False, alias="DEBUG")
+
     # Server configuration
     slack_bot_port: int = Field(default=8003, alias="SLACK_BOT_PORT")
     slack_bot_host: str = Field(default="0.0.0.0", alias="SLACK_BOT_HOST")
