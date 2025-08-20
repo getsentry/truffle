@@ -11,6 +11,7 @@ from config import settings
 class SlackService:
     def __init__(self):
         self.client = AsyncWebClient(token=settings.slack_bot_auth_token)
+        self._bot_user_id: str | None = None
 
     async def get_public_channels(
         self, exclude_archived: bool = True
@@ -67,6 +68,14 @@ class SlackService:
 
         return users
 
+    async def get_bot_user_id(self) -> str:
+        """Get the bot's user ID using auth.test API"""
+        if self._bot_user_id is None:
+            resp = await self.client.auth_test()
+            resp_data = cast(dict[str, Any], resp.data)
+            self._bot_user_id = resp_data.get("user_id")
+        return self._bot_user_id or ""
+
     def _normalize_user(self, member: dict[str, Any]) -> dict[str, Any]:
         """Normalize user data from Slack API"""
         user_id = cast(str, member.get("id"))
@@ -118,6 +127,10 @@ class SlackService:
                 if message.get("subtype") is not None:
                     continue
 
+                # Skip messages that mention the bot
+                if await self._message_mentions_bot(message):
+                    continue
+
                 # Add channel_id to message for context
                 message["channel_id"] = channel_id
                 yield message
@@ -143,6 +156,10 @@ class SlackService:
                             if thread_message.get("ts") == parent_ts:
                                 continue
 
+                            # Skip thread messages that mention the bot
+                            if await self._message_mentions_bot(thread_message):
+                                continue
+
                             thread_message["channel_id"] = channel_id
                             yield thread_message
 
@@ -158,6 +175,20 @@ class SlackService:
             cursor = resp_data.get("response_metadata", {}).get("next_cursor") or None
             if not cursor:
                 break
+
+    async def _message_mentions_bot(self, message: dict[str, Any]) -> bool:
+        """Check if a message mentions the bot"""
+        text = message.get("text", "")
+        if not text:
+            return False
+
+        bot_user_id = await self.get_bot_user_id()
+        if not bot_user_id:
+            return False
+
+        # Check for @mention of bot using <@USER_ID> format
+        mention_pattern = f"<@{bot_user_id}(?:\\|[^>]+)?>"
+        return bool(re.search(mention_pattern, text))
 
     def replace_user_mentions(self, text: str, users: dict[str, dict[str, Any]]) -> str:
         """Replace Slack user mentions with readable format"""
