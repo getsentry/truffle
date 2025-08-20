@@ -244,24 +244,24 @@ def format_expert_response(skills: list[str], experts: list) -> str:
 
     if len(experts) == 1:
         expert = experts[0]
-        name = expert.display_name or expert.user_name or expert.user_id
+        mention = format_expert_mention(expert)
         confidence = expert.confidence_score
         evidence = expert.evidence_count
 
         return (
             f"🎯 Found 1 expert for *{skills_text}*:\n"
-            f"• *{name}* (confidence: {confidence:.1%}, "
+            f"• {mention} (confidence: {confidence:.1%}, "
             f"{evidence} evidence{'s' if evidence != 1 else ''})"
         )
 
     elif len(experts) <= 5:
         expert_lines = []
         for expert in experts:
-            name = expert.display_name or expert.user_name or expert.user_id
+            mention = format_expert_mention(expert)
             confidence = expert.confidence_score
             evidence = expert.evidence_count
             expert_lines.append(
-                f"• *{name}* (confidence: {confidence:.1%}, "
+                f"• {mention} (confidence: {confidence:.1%}, "
                 f"{evidence} evidence{'s' if evidence != 1 else ''})"
             )
 
@@ -273,9 +273,9 @@ def format_expert_response(skills: list[str], experts: list) -> str:
         # Show top 3 + summary for large lists
         top_experts = []
         for expert in experts[:3]:
-            name = expert.display_name or expert.user_name or expert.user_id
+            mention = format_expert_mention(expert)
             confidence = expert.confidence_score
-            top_experts.append(f"• *{name}* ({confidence:.1%})")
+            top_experts.append(f"• {mention} ({confidence:.1%})")
 
         remaining = len(experts) - 3
         return (
@@ -283,6 +283,15 @@ def format_expert_response(skills: list[str], experts: list) -> str:
             + "\n".join(top_experts)
             + f"\n... and {remaining} more expert{'s' if remaining != 1 else ''}"
         )
+
+
+def format_expert_mention(expert) -> str:
+    """Format an expert as a clickable Slack mention"""
+    user_id = expert.user_id
+
+    # Use correct Slack API mention format: <@USER_ID>
+    # Slack will automatically render this as a clickable mention with the user's display name
+    return f"<@{user_id}>"
 
 
 @app.post("/ask", response_model=AskResponse)
