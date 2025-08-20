@@ -64,8 +64,17 @@ async def lifespan(app: FastAPI):
         max_instances=1,  # Prevent overlapping runs
     )
 
+    # Add periodic queue cleanup job
+    scheduler.add_job(
+        queue_service.clear_completed_tasks,
+        CronTrigger.from_crontab("37 * * * *"),  # Every hour at minute 37
+        id="queue_cleanup",
+        replace_existing=True,
+    )
+
     scheduler.start()
     logger.info(f"Scheduler started with cron: {settings.ingestion_cron}")
+    logger.info("Queue cleanup scheduled for minute 37 of every hour")
 
     # Start background workers for message processing
     await worker_manager.start_workers()
@@ -193,6 +202,17 @@ async def get_aggregation_stats():
         return stats
     except Exception as e:
         logger.error(f"Failed to get aggregation stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/queue/clear")
+async def clear_completed_tasks():
+    """Manually clear completed tasks from queue"""
+    try:
+        count = await queue_service.clear_completed_tasks()
+        return {"cleared_tasks": count, "status": "success"}
+    except Exception as e:
+        logger.error(f"Failed to clear completed tasks: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
