@@ -7,6 +7,7 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
+from slack_sdk.web.async_client import AsyncWebClient
 
 from config import settings
 from models import (
@@ -29,15 +30,19 @@ logger = logging.getLogger(__name__)
 expert_api_client: ExpertAPIClient | None = None
 skill_cache_service: SkillCacheService | None = None
 event_processor: EventProcessor | None = None
+slack_client: AsyncWebClient | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan manager for startup/shutdown tasks"""
-    global expert_api_client, skill_cache_service, event_processor
+    global expert_api_client, skill_cache_service, event_processor, slack_client
 
     # Startup: Initialize services and check API availability
     logger.info("Starting up Slack Bot service...")
+
+    # Initialize Slack client
+    slack_client = AsyncWebClient(token=settings.slack_bot_auth_token)
 
     # Initialize Expert API client
     expert_api_client = ExpertAPIClient(base_url=settings.expert_api_url)
@@ -155,28 +160,24 @@ async def slack_events(payload: SlackEventsRequest):
                     )
 
                     if search_response.results:
-                        expert_names = [
-                            result.display_name or result.user_name or result.user_id
-                            for result in search_response.results
-                        ]
-
-                        response_message = (
-                            f"Found {len(search_response.results)} experts for "
-                            f"{', '.join(expert_query.skills)}: "
-                            f"{', '.join(expert_names[:3])}"
+                        response_message = format_expert_response(
+                            expert_query.skills, search_response.results
                         )
 
-                        if len(expert_names) > 3:
-                            response_message += f" and {len(expert_names) - 3} more"
-
-                        # TODO Phase 4: Enhanced formatting and Slack message sending
+                        # Send reply to Slack channel
+                        await send_slack_reply(payload.model_dump(), response_message)
 
                         return SlackEventsResponse(ok=True, message=response_message)
                     else:
                         skills_text = ", ".join(expert_query.skills)
+                        no_experts_message = f"No experts found for {skills_text}"
+
+                        # Send reply to Slack channel
+                        await send_slack_reply(payload.model_dump(), no_experts_message)
+
                         return SlackEventsResponse(
                             ok=True,
-                            message=f"No experts found for {skills_text}",
+                            message=no_experts_message,
                         )
 
                 except Exception as api_error:
@@ -185,6 +186,10 @@ async def slack_events(payload: SlackEventsRequest):
                         "Sorry, I couldn't search for experts right now. "
                         "Please try again later."
                     )
+
+                    # Send error reply to Slack channel
+                    await send_slack_reply(payload.model_dump(), error_message)
+
                     return SlackEventsResponse(ok=True, message=error_message)
             else:
                 logger.info("No expert query extracted from event")
@@ -197,6 +202,87 @@ async def slack_events(payload: SlackEventsRequest):
             return SlackEventsResponse(ok=False, message="Error processing event")
 
     return SlackEventsResponse(ok=True, message="Event processed")
+
+
+async def send_slack_reply(event_data: dict, message: str) -> None:
+    """Send a reply message to the Slack channel"""
+    if not slack_client:
+        logger.error("Slack client not initialized")
+        return
+
+    try:
+        # Extract event details
+        event = event_data.get("event", {})
+        channel_id = event.get("channel")
+        thread_ts = event.get("thread_ts") or event.get(
+            "ts"
+        )  # Reply in thread if possible
+
+        if not channel_id:
+            logger.error("No channel ID found in event data")
+            return
+
+        # Send the message
+        response = await slack_client.chat_postMessage(
+            channel=channel_id,
+            text=message,
+            thread_ts=thread_ts,  # This makes it a threaded reply
+        )
+
+        if response["ok"]:
+            logger.info(f"Successfully sent reply to channel {channel_id}")
+        else:
+            logger.error(f"Failed to send Slack message: {response.get('error')}")
+
+    except Exception as e:
+        logger.error(f"Error sending Slack reply: {e}", exc_info=True)
+
+
+def format_expert_response(skills: list[str], experts: list) -> str:
+    """Format expert search results into a user-friendly message"""
+    skills_text = ", ".join(skills)
+
+    if len(experts) == 1:
+        expert = experts[0]
+        name = expert.display_name or expert.user_name or expert.user_id
+        confidence = expert.confidence_score
+        evidence = expert.evidence_count
+
+        return (
+            f"🎯 Found 1 expert for *{skills_text}*:\n"
+            f"• *{name}* (confidence: {confidence:.1%}, "
+            f"{evidence} evidence{'s' if evidence != 1 else ''})"
+        )
+
+    elif len(experts) <= 5:
+        expert_lines = []
+        for expert in experts:
+            name = expert.display_name or expert.user_name or expert.user_id
+            confidence = expert.confidence_score
+            evidence = expert.evidence_count
+            expert_lines.append(
+                f"• *{name}* (confidence: {confidence:.1%}, "
+                f"{evidence} evidence{'s' if evidence != 1 else ''})"
+            )
+
+        return f"🎯 Found {len(experts)} experts for *{skills_text}*:\n" + "\n".join(
+            expert_lines
+        )
+
+    else:
+        # Show top 3 + summary for large lists
+        top_experts = []
+        for expert in experts[:3]:
+            name = expert.display_name or expert.user_name or expert.user_id
+            confidence = expert.confidence_score
+            top_experts.append(f"• *{name}* ({confidence:.1%})")
+
+        remaining = len(experts) - 3
+        return (
+            f"🎯 Found {len(experts)} experts for *{skills_text}*:\n"
+            + "\n".join(top_experts)
+            + f"\n... and {remaining} more expert{'s' if remaining != 1 else ''}"
+        )
 
 
 @app.post("/ask", response_model=AskResponse)

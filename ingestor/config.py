@@ -13,11 +13,10 @@ class Settings(BaseSettings):
 
     # Database configuration
     database_url: str = Field(
-        default="postgresql://user1:pass@localhost/truffle",
-        alias="TRUFFLE_DB_URL"
+        default="postgresql://user1:pass@localhost/truffle", alias="TRUFFLE_DB_URL"
     )
 
-    # Slack configuration
+    # Slack API Configuration
     slack_bot_auth_token: str = Field(default="", alias="SLACK_BOT_AUTH_TOKEN")
 
     # OpenAI configuration
@@ -47,7 +46,7 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".envrc",
         "case_sensitive": False,
-        "extra": "ignore"  # Ignore extra environment variables
+        "extra": "ignore",  # Ignore extra environment variables
     }
 
     def __init__(self, **kwargs):
