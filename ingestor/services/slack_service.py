@@ -113,8 +113,9 @@ class SlackService:
             resp_data = cast(dict[str, Any], resp.data)
 
             for message in resp_data.get("messages", []):
-                # Skip channel join messages
-                if message.get("subtype") == "channel_join":
+                # Skip messages sent by Slack itself
+                # See https://api.slack.com/events/message#subtypes
+                if message.get("subtype") is not None:
                     continue
 
                 # Add channel_id to message for context
