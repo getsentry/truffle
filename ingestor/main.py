@@ -185,19 +185,6 @@ async def get_worker_stats():
     }
 
 
-# Score aggregation endpoints
-@app.post("/scores/aggregate")
-async def aggregate_scores():
-    """Manually trigger full score aggregation from evidence"""
-    try:
-        logger.info("Manual score aggregation triggered via API")
-        result = await aggregation_service.aggregate_all_scores()
-        return result
-    except Exception as e:
-        logger.error(f"Score aggregation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/scores/stats")
 async def get_aggregation_stats():
     """Get statistics about score aggregation"""

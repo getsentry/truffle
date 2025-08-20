@@ -3,6 +3,7 @@ import logging
 from datetime import UTC, datetime
 
 from services.queue_service import get_queue_service
+from services.score_aggregation_service import get_aggregation_service
 from services.slack_service import SlackService
 from services.storage_service import StorageService
 
@@ -83,6 +84,53 @@ async def run_slack_ingestion():
             f"Queue stats: {queue_stats}"
         )
 
+        # After first run, wait for workers to finish processing and aggregate scores
+        if is_first_run and messages_enqueued > 0:
+            logger.info(
+                "First run detected - will aggregate scores after processing completes"
+            )
+            await _wait_for_processing_and_aggregate(queue_service)
+
     except Exception as e:
         logger.error(f"Ingestion failed: {e}", exc_info=True)
         raise
+
+
+async def _wait_for_processing_and_aggregate(queue_service):
+    """Wait for message processing to complete, then aggregate scores"""
+    logger.info("Waiting for message processing to complete...")
+
+    # Wait for queue to be empty (all messages processed)
+    max_wait_minutes = 60  # Don't wait forever
+    wait_cycles = 0
+    max_cycles = max_wait_minutes * 6  # Check every 10 seconds
+
+    while wait_cycles < max_cycles:
+        stats = await queue_service.get_queue_stats()
+        pending = stats.get("pending", 0)
+        processing = stats.get("processing", 0)
+
+        if pending == 0 and processing == 0:
+            logger.info("All messages processed! Starting score aggregation...")
+            break
+
+        if wait_cycles % 30 == 0:  # Log every 5 minutes
+            logger.info(
+                f"Still processing: {pending} pending, {processing} processing..."
+            )
+
+        await asyncio.sleep(10)  # Wait 10 seconds
+        wait_cycles += 1
+
+    if wait_cycles >= max_cycles:
+        logger.warning(
+            "Timeout waiting for processing to complete, aggregating anyway..."
+        )
+
+    # Trigger score aggregation
+    try:
+        aggregation_service = get_aggregation_service()
+        result = await aggregation_service.aggregate_all_scores()
+        logger.info(f"Score aggregation completed: {result}")
+    except Exception as e:
+        logger.error(f"Score aggregation failed: {e}", exc_info=True)
