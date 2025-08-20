@@ -5,6 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -34,7 +35,14 @@ storage_service = StorageService()
 async def lifespan(app: FastAPI):
     """FastAPI lifespan manager for startup/shutdown tasks"""
 
-    # Startup: Initialize database and start scheduler
+    # Initialize Sentry
+    if settings.sentry_dsn:
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            traces_sample_rate=1.0,
+            debug=True,
+        )
+
     logger.info("Starting Truffle Expert API Service...")
 
     yield

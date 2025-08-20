@@ -4,6 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
@@ -38,13 +39,17 @@ async def lifespan(app: FastAPI):
     """FastAPI lifespan manager for startup/shutdown tasks"""
     global expert_api_client, skill_cache_service, event_processor, slack_client
 
-    # Startup: Initialize services and check API availability
+    # Initialize Sentry
+    if settings.sentry_dsn:
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            traces_sample_rate=1.0,
+            debug=True,
+        )
+
     logger.info("Starting up Slack Bot service...")
 
-    # Initialize Slack client
     slack_client = AsyncWebClient(token=settings.slack_bot_auth_token)
-
-    # Initialize Expert API client
     expert_api_client = ExpertAPIClient(base_url=settings.expert_api_url)
 
     # Check Expert API availability

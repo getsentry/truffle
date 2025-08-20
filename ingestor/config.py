@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     or .envrc files (loaded automatically by direnv).
     """
 
+    # Server configuration
+    ingestor_host: str = Field(default="0.0.0.0", alias="INGESTOR_HOST")
+    ingestor_port: int = Field(default=8001, alias="INGESTOR_PORT")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+
     # Database configuration
     database_url: str = Field(
         default="postgresql://truffle:truffle@localhost/truffle", alias="TRUFFLE_DB_URL"
@@ -21,14 +26,12 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     classifier_model: str = "gpt-4o"
 
+    # Sentry configuration
+    sentry_dsn: str | None = Field(default=None, alias="INGESTOR_SENTRY_DSN")
+
     # Processing flags
     extract_skills: bool = Field(default=False, alias="EXTRACT_SKILLS")
     classify_expertise: bool = Field(default=False, alias="CLASSIFY_EXPERTISE")
-
-    # Server configuration
-    ingestor_host: str = Field(default="0.0.0.0", alias="INGESTOR_HOST")
-    ingestor_port: int = Field(default=8001, alias="INGESTOR_PORT")
-    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
     # Service URLs
     expert_api_url: str = Field(default="http://localhost:8002", alias="EXPERT_API_URL")

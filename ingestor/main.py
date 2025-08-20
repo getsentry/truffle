@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
+import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
 from apscheduler.triggers.cron import CronTrigger  # type: ignore
 from fastapi import FastAPI, HTTPException, Query
@@ -43,7 +44,14 @@ aggregation_service = get_aggregation_service()
 async def lifespan(app: FastAPI):
     """FastAPI lifespan manager for startup/shutdown tasks"""
 
-    # Startup: Initialize database and start scheduler
+    # Initialize Sentry
+    if settings.sentry_dsn:
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            traces_sample_rate=1.0,
+            debug=True,
+        )
+
     logger.info("Starting Truffle Ingestion Service...")
 
     # Create database tables if they don't exist
