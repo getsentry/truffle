@@ -4,6 +4,7 @@ from datetime import date
 from typing import Any
 
 from config import settings
+from services.score_aggregation_service import get_aggregation_service
 from services.skill_service import SkillService
 from services.storage_service import StorageService
 
@@ -16,6 +17,7 @@ class MessageProcessor:
     def __init__(self):
         self.skill_service = SkillService()
         self.storage = StorageService()
+        self.aggregation_service = get_aggregation_service()
         # Thread context cache - in production this could be Redis
         self.thread_context: dict[str, dict[str, Any]] = {}
 
@@ -140,6 +142,25 @@ class MessageProcessor:
                     evidence_date=date.today(),
                     message_hash=message_hash,
                 )
+
+                # Update user skill scores incrementally
+                user = await self.storage.get_user_by_slack_id(user_id)
+                if user:
+                    for evaluation in evaluations[0].results:
+                        skill = await self.storage.get_skill_by_key(
+                            evaluation.skill_key
+                        )
+                        if skill:
+                            await self.aggregation_service.update_user_skill_score(
+                                user_id=user.user_id,
+                                skill_id=skill.skill_id,
+                                new_evidence_label=evaluation.label,
+                                new_evidence_confidence=evaluation.confidence,
+                                evidence_date=date.today(),
+                            )
+                            logger.debug(
+                                f"Updated score for {user_id}/{evaluation.skill_key}"
+                            )
             else:
                 logger.debug("No expertise evaluations to store")
 

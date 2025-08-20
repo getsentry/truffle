@@ -14,6 +14,7 @@ from schedulers.slack_ingestion import run_slack_ingestion
 from scripts.import_taxonomy import import_taxonomy_files
 from services.expert_search_service import ExpertQuery, ExpertSearchService, SortBy
 from services.queue_service import get_queue_service
+from services.score_aggregation_service import get_aggregation_service
 from services.skill_service import SkillService
 from services.storage_service import StorageService
 from workers import get_worker_manager
@@ -33,6 +34,9 @@ worker_manager = get_worker_manager(queue_service, num_workers=3)
 
 # Global expert search service
 expert_search_service = ExpertSearchService()
+
+# Global score aggregation service
+aggregation_service = get_aggregation_service()
 
 
 async def auto_import_skills():
@@ -442,6 +446,30 @@ async def suggest_skills(
         return {"query": q, "suggestions": suggestions}
     except Exception as e:
         logger.error(f"Error getting skill suggestions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Score aggregation endpoints
+@app.post("/scores/aggregate")
+async def aggregate_scores():
+    """Manually trigger full score aggregation from evidence"""
+    try:
+        logger.info("Manual score aggregation triggered via API")
+        result = await aggregation_service.aggregate_all_scores()
+        return result
+    except Exception as e:
+        logger.error(f"Score aggregation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/scores/stats")
+async def get_aggregation_stats():
+    """Get statistics about score aggregation"""
+    try:
+        stats = await aggregation_service.get_aggregation_stats()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get aggregation stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

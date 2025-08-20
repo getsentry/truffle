@@ -88,16 +88,14 @@ class StorageService:
         try:
             async with AsyncSessionLocal() as session:
                 # First, get skill IDs for the requested skill keys
-                skill_result = await session.execute(
-                    select(Skill.skill_id, Skill.skill_key).where(
-                        Skill.skill_key.in_(skill_keys)
-                    )
+                skill_query = select(Skill.skill_id, Skill.skill_key).where(
+                    Skill.skill_key.in_(skill_keys)
                 )
+                skill_result = await session.execute(skill_query)
                 skill_map = {
                     row.skill_key: row.skill_id for row in skill_result.fetchall()
                 }
                 found_skill_ids = list(skill_map.values())
-
                 if not found_skill_ids:
                     logger.warning(f"No skills found for keys: {skill_keys}")
                     return []
