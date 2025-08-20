@@ -322,7 +322,8 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        f"Starting Truffle Slack Bot on {settings.slack_bot_host}:{settings.slack_bot_port}"
+        "Starting Truffle Slack Bot on "
+        f"{settings.slack_bot_host}:{settings.slack_bot_port}"
     )
     uvicorn.run(
         "main:app",

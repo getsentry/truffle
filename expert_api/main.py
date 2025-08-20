@@ -147,7 +147,7 @@ async def search_experts(request: SkillSearchRequest):
 
 @app.get("/skills", response_model=SkillsResponse)
 async def list_skills():
-    """List all available skills from database"""
+    """List all available skills including the expert count"""
     try:
         # Get skills from database
         db_skills = await storage_service.get_all_skills()
