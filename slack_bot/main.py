@@ -6,7 +6,6 @@ from datetime import datetime
 
 import sentry_sdk
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from slack_sdk.web.async_client import AsyncWebClient
 
@@ -79,19 +78,6 @@ app = FastAPI(
     description="Slack bot for expert search and team knowledge discovery",
     version="1.0.0",
     lifespan=lifespan,
-)
-
-# Add CORS middleware for cross-service communication
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        settings.expert_api_url,
-        settings.ingestor_url,
-        "http://localhost:3000",  # For potential web UI
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 

@@ -7,7 +7,6 @@ from datetime import datetime
 
 import sentry_sdk
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from models import (
@@ -56,18 +55,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware for cross-service communication
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        settings.ingestor_url,
-        settings.slack_bot_url,
-        "http://localhost:3000",  # For potential web UI
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 
 
 @app.get("/")

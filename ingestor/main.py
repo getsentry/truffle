@@ -114,7 +114,7 @@ async def root():
     """Root endpoint with service status"""
     queue_stats = await queue_service.get_queue_stats()
     return {
-        "service": "Truffle Slack Ingestion",
+        "service": "Truffle Message Ingestion",
         "status": "running",
         "scheduler_active": scheduler.running if scheduler else False,
         "workers_active": worker_manager.is_running(),
