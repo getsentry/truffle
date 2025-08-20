@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration constants
 FIRST_RUN_HOURS = 24 * 30  # 30 days for initial historical import
-PERIODIC_RUN_HOURS = 1     # 1 hour for regular periodic runs
+PERIODIC_RUN_HOURS = 1  # 1 hour for regular periodic runs
 
 
 async def run_slack_ingestion():
@@ -27,8 +27,10 @@ async def run_slack_ingestion():
         is_first_run = await storage.is_database_empty()
         since_hours = FIRST_RUN_HOURS if is_first_run else PERIODIC_RUN_HOURS
 
-        logger.info(f"{'First run' if is_first_run else 'Periodic run'} - "
-                   f"fetching messages from last {since_hours} hours")
+        logger.info(
+            f"{'First run' if is_first_run else 'Periodic run'} - "
+            f"fetching messages from last {since_hours} hours"
+        )
 
         # Get channels and users
         logger.info("Fetching channels and users from Slack...")
@@ -69,7 +71,9 @@ async def run_slack_ingestion():
                         await asyncio.sleep(0.1)  # Brief pause between batches
 
             except Exception as e:
-                logger.error(f"Error enqueuing messages from channel {channel['name']}: {e}")
+                logger.error(
+                    f"Error enqueuing messages from channel {channel['name']}: {e}"
+                )
                 continue  # Continue with next channel
 
         duration = (datetime.now(UTC) - start_time).total_seconds()

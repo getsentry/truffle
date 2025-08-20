@@ -3,7 +3,7 @@ import logging
 from typing import Any
 
 from processors.message_processor import MessageProcessor
-from services.queue_service import QueueService, TaskStatus
+from services.queue_service import QueueService
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,9 @@ class MessageWorker:
                     await self._process_task(task)
 
                 except Exception as e:
-                    logger.error(f"Worker {self.worker_id} encountered error: {e}", exc_info=True)
+                    logger.error(
+                        f"Worker {self.worker_id} encountered error: {e}", exc_info=True
+                    )
                     self.error_count += 1
                     await asyncio.sleep(1)  # Back off on errors
 
@@ -48,7 +50,9 @@ class MessageWorker:
             raise
         finally:
             self.is_running = False
-            logger.info(f"Worker {self.worker_id} stopped. Processed: {self.processed_count}, Errors: {self.error_count}")
+            logger.info(
+                f"Worker {self.worker_id} stopped. Processed: {self.processed_count}, Errors: {self.error_count}"
+            )
 
     async def _process_task(self, task) -> None:
         """Process a single message task"""
@@ -56,11 +60,7 @@ class MessageWorker:
             logger.debug(f"Worker {self.worker_id} processing task {task.task_id}")
 
             # Process the message through the normal pipeline
-            await self.processor.process_message(
-                task.message,
-                task.channel,
-                task.users
-            )
+            await self.processor.process_message(task.message, task.channel, task.users)
 
             # Mark as completed
             await self.queue_service.mark_completed(task.task_id)
@@ -85,7 +85,7 @@ class MessageWorker:
             "worker_id": self.worker_id,
             "is_running": self.is_running,
             "processed_count": self.processed_count,
-            "error_count": self.error_count
+            "error_count": self.error_count,
         }
 
 
@@ -103,7 +103,7 @@ class WorkerManager:
         logger.info(f"Starting {self.num_workers} message workers")
 
         for i in range(self.num_workers):
-            worker = MessageWorker(f"worker-{i+1}", self.queue_service)
+            worker = MessageWorker(f"worker-{i + 1}", self.queue_service)
             self.workers.append(worker)
 
             # Start worker as background task
@@ -146,7 +146,9 @@ class WorkerManager:
 _worker_manager: WorkerManager | None = None
 
 
-def get_worker_manager(queue_service: QueueService, num_workers: int = 3) -> WorkerManager:
+def get_worker_manager(
+    queue_service: QueueService, num_workers: int = 3
+) -> WorkerManager:
     """Get the global worker manager instance"""
     global _worker_manager
     if _worker_manager is None:

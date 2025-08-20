@@ -88,7 +88,6 @@ class StorageService:
         try:
             async with AsyncSessionLocal() as session:
                 # First, get skill IDs for the requested skill keys
-                import ipdb; ipdb.set_trace()
                 skill_result = await session.execute(
                     select(Skill.skill_id, Skill.skill_key).where(
                         Skill.skill_key.in_(skill_keys)
