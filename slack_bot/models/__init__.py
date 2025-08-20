@@ -1,13 +1,7 @@
 """Models package for Slack bot"""
 
 # Import API models
-from .api_models import (
-    AskRequest,
-    AskResponse,
-    HealthResponse,
-    SlackEventsRequest,
-    SlackEventsResponse,
-)
+from .api_models import HealthResponse, SlackEventsRequest, SlackEventsResponse
 
 # Import Slack event models
 from .slack_models import (
@@ -20,8 +14,6 @@ from .slack_models import (
 
 __all__ = [
     # API models
-    "AskRequest",
-    "AskResponse",
     "HealthResponse",
     "SlackEventsRequest",
     "SlackEventsResponse",

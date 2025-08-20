@@ -16,7 +16,6 @@ from scripts.import_taxonomy import import_taxonomy_files
 from services.expert_search_service import ExpertQuery, ExpertSearchService, SortBy
 from services.queue_service import get_queue_service
 from services.score_aggregation_service import get_aggregation_service
-from services.skill_service import SkillService
 from services.storage_service import StorageService
 from workers import get_worker_manager
 
@@ -129,19 +128,6 @@ async def root():
     }
 
 
-@app.post("/trigger-ingestion")
-async def trigger_manual_ingestion():
-    """Manual trigger for ingestion - useful for testing/debugging"""
-    logger.info("Manual ingestion triggered via API")
-
-    try:
-        await run_slack_ingestion()
-        return {"message": "Ingestion completed successfully"}
-    except Exception as e:
-        logger.error(f"Manual ingestion failed: {e}")
-        return {"error": f"Ingestion failed: {str(e)}"}, 500
-
-
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -188,47 +174,11 @@ async def list_jobs():
     return {"jobs": jobs}
 
 
-@app.post("/reload-skills")
-async def reload_skills():
-    """Force reload skills from database"""
-    skill_service = SkillService()
-    await skill_service.reload_skills()
-    return {"message": "Skills reloaded successfully"}
-
-
-@app.post("/import-skills")
-async def import_skills(validate_only: bool = False):
-    """Import skills from JSON files in skills/ directory"""
-    try:
-        skills_dir = Path("skills")
-        if not skills_dir.exists():
-            return {"error": "Skills directory not found", "path": str(skills_dir)}
-
-        await import_taxonomy_files(skills_dir=skills_dir, validate_only=validate_only)
-
-        # Reload skills in memory after successful import
-        if not validate_only:
-            skill_service = SkillService()
-            await skill_service.reload_skills()
-
-        action = "validated" if validate_only else "imported and reloaded"
-        return {"message": f"Skills {action} successfully"}
-
-    except Exception as e:
-        return {"error": str(e)}
-
-
 # Queue monitoring endpoints
 @app.get("/queue/stats")
 async def get_queue_stats():
     """Get current queue statistics"""
     return await queue_service.get_queue_stats()
-
-
-@app.get("/queue/tasks")
-async def get_recent_tasks(limit: int = 50):
-    """Get recent tasks for monitoring"""
-    return {"tasks": await queue_service.get_recent_tasks(limit)}
 
 
 @app.get("/workers/stats")
@@ -238,13 +188,6 @@ async def get_worker_stats():
         "workers": worker_manager.get_worker_stats(),
         "manager_running": worker_manager.is_running(),
     }
-
-
-@app.post("/queue/clear-completed")
-async def clear_completed_tasks():
-    """Clear completed tasks to free memory"""
-    count = await queue_service.clear_completed_tasks()
-    return {"message": f"Cleared {count} completed tasks"}
 
 
 # Pydantic models for expert search API

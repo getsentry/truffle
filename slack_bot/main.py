@@ -11,13 +11,7 @@ from fastapi.responses import PlainTextResponse
 from slack_sdk.web.async_client import AsyncWebClient
 
 from config import settings
-from models import (
-    AskRequest,
-    AskResponse,
-    HealthResponse,
-    SlackEventsRequest,
-    SlackEventsResponse,
-)
+from models import HealthResponse, SlackEventsRequest, SlackEventsResponse
 from services import EventProcessor, ExpertAPIClient, SkillCacheService
 
 # Configure logging
@@ -204,6 +198,38 @@ async def slack_events(payload: SlackEventsRequest):
     return SlackEventsResponse(ok=True, message="Event processed")
 
 
+@app.get("/debug/stats")
+async def debug_stats():
+    """Debug endpoint to show processing statistics"""
+    if not event_processor:
+        return {"error": "Event processor not initialized"}
+
+    stats = await event_processor.get_processing_stats()
+
+    # Check Expert API status
+    expert_api_status = "unknown"
+    if expert_api_client:
+        try:
+            expert_api_status = (
+                "available" if await expert_api_client.is_available() else "unavailable"
+            )
+        except Exception:
+            expert_api_status = "error"
+
+    # Get skill cache stats
+    cache_stats = {}
+    if skill_cache_service:
+        cache_stats = skill_cache_service.get_cache_stats()
+
+    return {
+        "service": "Truffle Slack Bot",
+        "processing_stats": stats,
+        "expert_api_status": expert_api_status,
+        "expert_api_url": settings.expert_api_url,
+        "skill_cache_stats": cache_stats,
+    }
+
+
 async def send_slack_reply(event_data: dict, message: str) -> None:
     """Send a reply message to the Slack channel"""
     if not slack_client:
@@ -290,121 +316,6 @@ def format_expert_mention(expert) -> str:
     user_id = expert.user_id
 
     return f"<@{user_id}>"
-
-
-@app.post("/ask", response_model=AskResponse)
-async def ask(_: AskRequest) -> AskResponse:
-    """Manual ask endpoint for testing"""
-    return AskResponse(ok=True, answer="example response")
-
-
-@app.get("/debug/stats")
-async def debug_stats():
-    """Debug endpoint to show processing statistics"""
-    if not event_processor:
-        return {"error": "Event processor not initialized"}
-
-    stats = await event_processor.get_processing_stats()
-
-    # Check Expert API status
-    expert_api_status = "unknown"
-    if expert_api_client:
-        try:
-            expert_api_status = (
-                "available" if await expert_api_client.is_available() else "unavailable"
-            )
-        except Exception:
-            expert_api_status = "error"
-
-    # Get skill cache stats
-    cache_stats = {}
-    if skill_cache_service:
-        cache_stats = skill_cache_service.get_cache_stats()
-
-    return {
-        "service": "Truffle Slack Bot",
-        "processing_stats": stats,
-        "expert_api_status": expert_api_status,
-        "expert_api_url": settings.expert_api_url,
-        "skill_cache_stats": cache_stats,
-    }
-
-
-@app.post("/debug/parse")
-async def debug_parse_query(request: dict):
-    """Debug endpoint to test query parsing"""
-    if not event_processor:
-        return {"error": "Event processor not initialized"}
-
-    text = request.get("text", "")
-    if not text:
-        return {"error": "No text provided"}
-
-    # Create a mock parsed message for testing
-    from models.slack_models import ParsedSlackMessage
-
-    mock_message = ParsedSlackMessage(
-        text=text,
-        cleaned_text=text,  # In real usage this would be cleaned
-        user_id="U123TEST",
-        channel_id="C123TEST",
-        timestamp="123456789",
-        is_question=True,
-        is_app_mention=True,
-    )
-
-    # Parse the query
-    expert_query = await event_processor.query_parser.parse_query(mock_message)
-
-    if expert_query:
-        return {
-            "input": text,
-            "extracted_query": {
-                "skills": expert_query.skills,
-                "query_type": expert_query.query_type,
-                "confidence": expert_query.confidence,
-            },
-        }
-    else:
-        return {"input": text, "result": "No expert query found"}
-
-
-@app.post("/debug/expert-search")
-async def debug_expert_search(request: dict):
-    """Debug endpoint to test Expert API search"""
-    if not expert_api_client:
-        return {"error": "Expert API client not initialized"}
-
-    skills = request.get("skills", [])
-    if not skills:
-        return {"error": "No skills provided"}
-
-    try:
-        search_response = await expert_api_client.search_experts(
-            skills=skills, limit=10, min_confidence=0.0
-        )
-
-        return {
-            "query": {"skills": skills},
-            "results": [
-                {
-                    "user_id": result.user_id,
-                    "display_name": result.display_name,
-                    "skills": result.skills,
-                    "confidence": result.confidence_score,
-                    "evidence_count": result.evidence_count,
-                }
-                for result in search_response.results
-            ],
-            "total_found": search_response.total_found,
-            "processing_time_ms": search_response.processing_time_ms,
-        }
-
-    except Exception as e:
-        return {
-            "error": f"Expert API search failed: {str(e)}",
-            "query": {"skills": skills},
-        }
 
 
 if __name__ == "__main__":

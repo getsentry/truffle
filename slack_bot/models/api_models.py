@@ -20,13 +20,3 @@ class SlackEventsRequest(BaseModel):
 class SlackEventsResponse(BaseModel):
     ok: bool
     message: str
-
-
-class AskRequest(BaseModel):
-    question: str
-    context: str | None = None
-
-
-class AskResponse(BaseModel):
-    ok: bool
-    answer: str
