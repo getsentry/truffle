@@ -39,26 +39,6 @@ expert_search_service = ExpertSearchService()
 aggregation_service = get_aggregation_service()
 
 
-async def auto_import_skills():
-    """Auto-import skills from JSON files if skills table is empty"""
-    try:
-        storage = StorageService()
-        existing_skills = await storage.get_all_skills()
-        if not existing_skills:
-            skills_dir = Path("skills")
-            if skills_dir.exists():
-                logger.info("Skills table empty, importing from JSON files...")
-                await import_taxonomy_files(skills_dir=skills_dir, validate_only=False)
-                logger.info("Skills imported successfully")
-            else:
-                logger.warning(f"Skills directory not found: {skills_dir}")
-        else:
-            logger.info(f"Skills table already contains {len(existing_skills)} skills")
-    except Exception as e:
-        logger.error(f"Failed to auto-import skills: {e}")
-        # Don't fail startup, just log the error
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan manager for startup/shutdown tasks"""
@@ -97,6 +77,26 @@ async def lifespan(app: FastAPI):
 
     scheduler.shutdown(wait=True)
     logger.info("Scheduler stopped")
+
+
+async def auto_import_skills():
+    """Auto-import skills from JSON files if skills table is empty"""
+    try:
+        storage = StorageService()
+        existing_skills = await storage.get_all_skills()
+        if not existing_skills:
+            skills_dir = Path("skills")
+            if skills_dir.exists():
+                logger.info("Skills table empty, importing from JSON files...")
+                await import_taxonomy_files(skills_dir=skills_dir, validate_only=False)
+                logger.info("Skills imported successfully")
+            else:
+                logger.warning(f"Skills directory not found: {skills_dir}")
+        else:
+            logger.info(f"Skills table already contains {len(existing_skills)} skills")
+    except Exception as e:
+        logger.error(f"Failed to auto-import skills: {e}")
+        # Don't fail startup, just log the error
 
 
 app = FastAPI(
@@ -477,7 +477,7 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        "Starting Ingestor Service on "
+        "Starting Truffle Ingestor Service on "
         f"{settings.ingestor_host}:{settings.ingestor_port}"
     )
     uvicorn.run(

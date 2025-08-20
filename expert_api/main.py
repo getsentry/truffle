@@ -2,6 +2,7 @@
 
 import json
 import logging
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI
@@ -28,11 +29,23 @@ logger = logging.getLogger(__name__)
 # Initialize storage service
 storage_service = StorageService()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan manager for startup/shutdown tasks"""
+
+    # Startup: Initialize database and start scheduler
+    logger.info("Starting Truffle Expert API Service...")
+
+    yield
+
+
 # Create FastAPI app
 app = FastAPI(
     title="Truffle Expert Search API",
     description="Dedicated service for finding experts by skills and expertise",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware for cross-service communication
@@ -175,7 +188,7 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        "Starting Expert API on "
+        "Starting Truffle Expert API on "
         f"{settings.expert_api_host}:{settings.expert_api_port}"
     )
     uvicorn.run(

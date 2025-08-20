@@ -50,33 +50,28 @@ async def lifespan(app: FastAPI):
     # Check Expert API availability
     try:
         if await expert_api_client.is_available():
-            logger.info("✅ Expert API is available")
+            logger.info("Expert API is available")
         else:
-            logger.warning("⚠️ Expert API is not responding")
+            logger.warning("Expert API is not responding")
     except Exception as e:
-        logger.error(f"❌ Failed to check Expert API: {e}")
-
-    # Initialize Skill Cache Service
-    skill_cache_service = SkillCacheService(expert_api_client, cache_ttl_minutes=60)
+        logger.error(f"Failed to check Expert API: {e}")
 
     # Pre-populate skill cache
+    skill_cache_service = SkillCacheService(expert_api_client, cache_ttl_minutes=60)
     try:
         await skill_cache_service.refresh_cache()
-        logger.info("✅ Skill cache initialized successfully")
+        logger.info("Skill cache initialized successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize skill cache: {e}")
+        logger.error(f"Failed to initialize skill cache: {e}")
 
     # Initialize Event Processor with skill cache
-    # TODO: Get bot_user_id from Slack API or config
     event_processor = EventProcessor(skill_cache_service, bot_user_id=None)
 
-    logger.info("✅ All services initialized successfully")
+    logger.info("All services initialized successfully")
 
     yield
 
-    # Shutdown: Clean up services
     logger.info("Shutting down Slack Bot service...")
-    # Add any cleanup logic here if needed
 
 
 # Create FastAPI app
@@ -249,7 +244,7 @@ def format_expert_response(skills: list[str], experts: list) -> str:
         evidence = expert.evidence_count
 
         return (
-            f"🎯 Found 1 expert for *{skills_text}*:\n"
+            f"✨ Found 1 expert for *{skills_text}*: ✨\n"
             f"• {mention} (confidence: {confidence:.1%}, "
             f"{evidence} evidence{'s' if evidence != 1 else ''})"
         )
@@ -265,7 +260,7 @@ def format_expert_response(skills: list[str], experts: list) -> str:
                 f"{evidence} evidence{'s' if evidence != 1 else ''})"
             )
 
-        return f"🎯 Found {len(experts)} experts for *{skills_text}*:\n" + "\n".join(
+        return f"✨ Found {len(experts)} experts for *{skills_text}*: ✨\n" + "\n".join(
             expert_lines
         )
 
@@ -279,7 +274,7 @@ def format_expert_response(skills: list[str], experts: list) -> str:
 
         remaining = len(experts) - 3
         return (
-            f"🎯 Found {len(experts)} experts for *{skills_text}*:\n"
+            f"✨ Found {len(experts)} experts for *{skills_text}*: ✨\n"
             + "\n".join(top_experts)
             + f"\n... and {remaining} more expert{'s' if remaining != 1 else ''}"
         )
@@ -289,8 +284,6 @@ def format_expert_mention(expert) -> str:
     """Format an expert as a clickable Slack mention"""
     user_id = expert.user_id
 
-    # Use correct Slack API mention format: <@USER_ID>
-    # Slack will automatically render this as a clickable mention with the user's display name
     return f"<@{user_id}>"
 
 
@@ -413,7 +406,7 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        f"Starting Slack Bot on {settings.slack_bot_host}:{settings.slack_bot_port}"
+        f"Starting Truffle Slack Bot on {settings.slack_bot_host}:{settings.slack_bot_port}"
     )
     uvicorn.run(
         "main:app",
