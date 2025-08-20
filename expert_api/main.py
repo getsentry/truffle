@@ -9,12 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from models import (
-    ExpertSearchResponse,
     ExpertResult,
+    ExpertSearchResponse,
     HealthResponse,
+    SkillInfo,
     SkillSearchRequest,
     SkillsResponse,
-    SkillInfo,
 )
 from services import StorageService
 
@@ -84,60 +84,43 @@ async def search_experts(request: SkillSearchRequest):
 
     logger.info(f"Searching for experts with skills: {request.skills}")
 
-    # TODO: Replace with actual database query
-    # For now, return mock data for testing
-    mock_results = []
+    # Query database for actual experts
+    try:
+        expert_data = await storage_service.find_experts_by_skills(
+            skill_keys=request.skills,
+            limit=request.limit,
+            min_confidence=request.min_confidence
+        )
 
-    if "python" in [skill.lower() for skill in request.skills]:
-        mock_results.append(ExpertResult(
-            user_id="U123PYTHON",
-            user_name="alice.python",
-            display_name="Alice Python",
-            skills=["python", "django", "fastapi"],
-            confidence_score=0.95,
-            evidence_count=15,
-            total_messages=42
-        ))
+        # Convert to ExpertResult objects
+        expert_results = []
+        for data in expert_data:
+            expert_result = ExpertResult(
+                user_id=data["user_id"],
+                user_name=data["user_name"],
+                display_name=data["display_name"],
+                skills=data["skills"],
+                confidence_score=data["confidence_score"],
+                evidence_count=data["evidence_count"],
+                total_messages=data["total_messages"]
+            )
+            expert_results.append(expert_result)
 
-    if "react" in [skill.lower() for skill in request.skills]:
-        mock_results.append(ExpertResult(
-            user_id="U456REACT",
-            user_name="bob.frontend",
-            display_name="Bob React",
-            skills=["react", "typescript", "javascript"],
-            confidence_score=0.88,
-            evidence_count=12,
-            total_messages=35
-        ))
+        limited_results = expert_results
 
-    if "kubernetes" in [skill.lower() for skill in request.skills]:
-        mock_results.append(ExpertResult(
-            user_id="U789K8S",
-            user_name="charlie.devops",
-            display_name="Charlie K8s",
-            skills=["kubernetes", "docker", "terraform"],
-            confidence_score=0.92,
-            evidence_count=8,
-            total_messages=28
-        ))
-
-    # Apply confidence filter
-    filtered_results = [
-        r for r in mock_results
-        if r.confidence_score >= request.min_confidence
-    ]
-
-    # Apply limit
-    limited_results = filtered_results[:request.limit]
+    except Exception as e:
+        logger.error(f"Error querying experts from database: {e}")
+        # Return empty results on error
+        limited_results = []
 
     processing_time = (time.time() - start_time) * 1000
 
     return ExpertSearchResponse(
         query=request,
         results=limited_results,
-        total_found=len(filtered_results),
+        total_found=len(limited_results),
         processing_time_ms=processing_time,
-        search_strategy="mock_skill_based"
+        search_strategy="database_skill_based"
     )
 
 
