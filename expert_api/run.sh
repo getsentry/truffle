@@ -25,7 +25,7 @@ if [ ! -f "uv.lock" ] || [ "pyproject.toml" -nt "uv.lock" ]; then
 fi
 
 # Start FastAPI server
-echo "Starting Expert Search API server on http://localhost:8002"
+echo "Starting Expert Search API server on ${EXPERT_API_HOST:-0.0.0.0}:${EXPERT_API_PORT:-8002}"
 echo "API endpoints:"
 echo "  - GET  /           - Service status"
 echo "  - GET  /health     - Health check"
@@ -34,4 +34,4 @@ echo ""
 echo "Press Ctrl+C to stop"
 echo ""
 
-uv run uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+uv run uvicorn main:app --host ${EXPERT_API_HOST:-0.0.0.0} --port ${EXPERT_API_PORT:-8002} --reload

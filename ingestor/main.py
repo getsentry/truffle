@@ -46,7 +46,9 @@ async def lifespan(app: FastAPI):
             debug=True,
         )
 
-    logger.info("Starting Truffle Ingestion Service...")
+    logger.info(
+        f"Starting up {settings.service_name}({settings.service_version}) service..."
+    )
 
     # Create database tables if they don't exist
     await create_tables()
@@ -82,7 +84,10 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown: Stop workers and scheduler
+    logger.info(
+        f"Shutting down {settings.service_name}({settings.service_version}) service..."
+    )
+
     await worker_manager.stop_workers()
     logger.info("Background workers stopped")
 
@@ -120,11 +125,12 @@ app = FastAPI(
 
 @app.get("/")
 async def root():
-    """Root endpoint with service status"""
+    """Root endpoint - service status"""
     queue_stats = await queue_service.get_queue_stats()
     return {
-        "service": "Truffle Message Ingestion",
+        "service": settings.service_name,
         "status": "running",
+        "version": settings.service_version,
         "scheduler_active": scheduler.running if scheduler else False,
         "workers_active": worker_manager.is_running(),
         "queue_stats": queue_stats,
@@ -220,7 +226,7 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        "Starting Truffle Ingestor Service on "
+        f"Starting {settings.service_name}({settings.service_version}) on "
         f"{settings.ingestor_host}:{settings.ingestor_port}"
     )
     uvicorn.run(

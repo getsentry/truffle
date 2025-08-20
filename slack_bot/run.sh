@@ -13,13 +13,10 @@ if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-# Check required environment variables
-if [ -z "${SLACK_BOT_TOKEN:-}" ]; then
-    echo "Warning: SLACK_BOT_TOKEN environment variable not set"
-fi
-
-if [ -z "${SLACK_SIGNING_SECRET:-}" ]; then
-    echo "Warning: SLACK_SIGNING_SECRET environment variable not set"
+# Check environment variables
+if [ -z "$SLACK_BOT_AUTH_TOKEN" ]; then
+    echo "Error: SLACK_BOT_AUTH_TOKEN environment variable is required"
+    exit 1
 fi
 
 # Install dependencies if needed
@@ -29,11 +26,10 @@ if [ ! -f "uv.lock" ] || [ "pyproject.toml" -nt "uv.lock" ]; then
 fi
 
 # Start FastAPI server
-echo "Starting Slack Bot service on http://localhost:8003"
+echo "Starting Slack Bot service on ${SLACK_BOT_HOST:-0.0.0.0}:${SLACK_BOT_PORT:-8003}"
 echo "API endpoints:"
 echo "  - GET  /           - Service status"
 echo "  - GET  /health     - Health check"
-echo "  - POST /slack/events - Slack event handler"
 echo "  - GET  /docs       - API documentation"
 echo ""
 echo "Press Ctrl+C to stop"

@@ -42,9 +42,15 @@ async def lifespan(app: FastAPI):
             debug=True,
         )
 
-    logger.info("Starting Truffle Expert API Service...")
+    logger.info(
+        f"Starting up {settings.service_name}({settings.service_version}) service..."
+    )
 
     yield
+
+    logger.info(
+        f"Shutting down {settings.service_name}({settings.service_version}) service..."
+    )
 
 
 # Create FastAPI app
@@ -62,9 +68,9 @@ app = FastAPI(
 async def root():
     """Root endpoint - service status"""
     return {
-        "service": "Truffle Expert Search API",
+        "service": settings.service_name,
         "status": "running",
-        "version": "1.0.0",
+        "version": settings.service_version,
         "timestamp": datetime.utcnow().isoformat(),
         "description": "Dedicated expert search and skill discovery service"
     }
@@ -184,7 +190,7 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        "Starting Truffle Expert API on "
+        f"Starting {settings.service_name}({settings.service_version}) on "
         f"{settings.expert_api_host}:{settings.expert_api_port}"
     )
     uvicorn.run(

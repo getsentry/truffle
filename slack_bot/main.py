@@ -40,7 +40,9 @@ async def lifespan(app: FastAPI):
             debug=True,
         )
 
-    logger.info("Starting up Slack Bot service...")
+    logger.info(
+        f"Starting up {settings.service_name}({settings.service_version}) service..."
+    )
 
     slack_client = AsyncWebClient(token=settings.slack_bot_auth_token)
     expert_api_client = ExpertAPIClient(base_url=settings.expert_api_url)
@@ -69,7 +71,9 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    logger.info("Shutting down Slack Bot service...")
+    logger.info(
+        f"Shutting down {settings.service_name}({settings.service_version}) service..."
+    )
 
 
 # Create FastAPI app
@@ -85,9 +89,9 @@ app = FastAPI(
 async def root():
     """Root endpoint - service status"""
     return {
-        "service": "Truffle Slack Bot",
+        "service": settings.service_name,
         "status": "running",
-        "version": "1.0.0",
+        "version": settings.service_version,
         "timestamp": datetime.utcnow().isoformat(),
         "description": "Slack bot for expert search and team knowledge discovery",
     }
@@ -308,7 +312,7 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info(
-        "Starting Truffle Slack Bot on "
+        f"Starting {settings.service_name}({settings.service_version}) on "
         f"{settings.slack_bot_host}:{settings.slack_bot_port}"
     )
     uvicorn.run(

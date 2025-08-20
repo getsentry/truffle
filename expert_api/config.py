@@ -1,6 +1,8 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+VERSION = "1.0.0"
+
 
 class Settings(BaseSettings):
     """Truffle Expert API configuration settings
@@ -8,6 +10,9 @@ class Settings(BaseSettings):
     These settings can be configured via environment variables
     or .envrc files (loaded automatically by direnv).
     """
+
+    service_name: str = "Truffle Expert Search API"
+    service_version: str = VERSION
 
     # Server configuration
     expert_api_host: str = Field(default="0.0.0.0", alias="EXPERT_API_HOST")

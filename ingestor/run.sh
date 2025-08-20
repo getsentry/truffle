@@ -31,15 +31,13 @@ if [ ! -f "uv.lock" ] || [ "pyproject.toml" -nt "uv.lock" ]; then
 fi
 
 # Start FastAPI server
-echo "Starting Ingestor Service on http://localhost:8001"
+echo "Starting Ingestor Service on ${INGESTOR_HOST:-0.0.0.0}:${INGESTOR_PORT:-8001}"
 echo "API endpoints:"
 echo "  - GET  /           - Service status"
 echo "  - GET  /health     - Health check"
-echo "  - POST /trigger-ingestion - Manual trigger"
-echo "  - GET  /jobs       - List scheduled jobs"
 echo "  - GET  /docs       - API documentation"
 echo ""
-echo "Automatic ingestion runs every minute"
+echo "Automatic ingestion runs periodically"
 echo "Press Ctrl+C to stop"
 echo ""
 

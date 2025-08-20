@@ -1,6 +1,8 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+VERSION = "1.0.0"
+
 
 class Settings(BaseSettings):
     """Truffle Slack Bot configuration settings
@@ -8,6 +10,9 @@ class Settings(BaseSettings):
     These settings can be configured via environment variables
     or .envrc files (loaded automatically by direnv).
     """
+
+    service_name: str = "Truffle Slack Bot"
+    service_version: str = VERSION
 
     # Server configuration
     slack_bot_port: int = Field(default=8003, alias="SLACK_BOT_PORT")
