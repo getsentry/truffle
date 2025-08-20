@@ -1,11 +1,9 @@
-"""Configuration management for Ingestor service"""
-
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Ingestor configuration settings
+    """Truffle Ingestor configuration settings
 
     These settings can be configured via environment variables
     or .envrc files (loaded automatically by direnv).
@@ -13,7 +11,7 @@ class Settings(BaseSettings):
 
     # Database configuration
     database_url: str = Field(
-        default="postgresql://user1:pass@localhost/truffle", alias="TRUFFLE_DB_URL"
+        default="postgresql://truffle:truffle@localhost/truffle", alias="TRUFFLE_DB_URL"
     )
 
     # Slack API Configuration
@@ -37,11 +35,7 @@ class Settings(BaseSettings):
     slack_bot_url: str = Field(default="http://localhost:8003", alias="SLACK_BOT_URL")
 
     # Scheduling
-    ingestion_cron: str = "*/1 * * * *"  # Every minute
-
-    # Queue settings (for future scaling)
-    redis_url: str = "redis://localhost:6379"
-    queue_name: str = "slack_messages"
+    ingestion_cron: str = "*/5 * * * *"  # Every 5 minutes
 
     model_config = {
         "env_file": ".envrc",
