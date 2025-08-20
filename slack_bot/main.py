@@ -148,7 +148,6 @@ async def slack_events(payload: SlackEventsRequest):
                             expert_query.skills, search_response.results
                         )
 
-                        # Send reply to Slack channel
                         await send_slack_reply(payload.model_dump(), response_message)
 
                         return SlackEventsResponse(ok=True, message=response_message)
@@ -156,7 +155,6 @@ async def slack_events(payload: SlackEventsRequest):
                         skills_text = ", ".join(expert_query.skills)
                         no_experts_message = f"No experts found for {skills_text}"
 
-                        # Send reply to Slack channel
                         await send_slack_reply(payload.model_dump(), no_experts_message)
 
                         return SlackEventsResponse(
@@ -171,12 +169,29 @@ async def slack_events(payload: SlackEventsRequest):
                         "Please try again later."
                     )
 
-                    # Send error reply to Slack channel
                     await send_slack_reply(payload.model_dump(), error_message)
 
                     return SlackEventsResponse(ok=True, message=error_message)
             else:
                 logger.info("No expert query extracted from event")
+
+                message_dump = payload.model_dump()
+                try:
+                    user_message = (
+                        message_dump.get("event", {})
+                        .get("text")
+                        .split(">")[1]
+                        .strip()[:50]
+                    )
+                except Exception:
+                    user_message = None
+
+                error_message = (
+                    f"Sorry, I do not understand your message: *{user_message}*... "
+                    'Try something like: "Who knows Javascript?"'
+                )
+                await send_slack_reply(message_dump, error_message)
+
                 return SlackEventsResponse(
                     ok=True, message="Event processed, no action needed"
                 )
