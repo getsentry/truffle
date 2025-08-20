@@ -1,6 +1,7 @@
 from datetime import date
 from typing import Any
 
+import sentry_sdk
 from sqlalchemy import and_, select, text
 from sqlalchemy.dialects.postgresql import insert
 
@@ -15,9 +16,7 @@ class StorageService:
     async def is_database_empty(self) -> bool:
         """Check if database is empty (no expertise evidence exists)"""
         async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                select(ExpertiseEvidence).limit(1)
-            )
+            result = await session.execute(select(ExpertiseEvidence).limit(1))
             return result.scalar_one_or_none() is None
 
     async def upsert_users(self, users_data: dict[str, dict[str, Any]]):
@@ -89,6 +88,7 @@ class StorageService:
 
             await session.commit()
 
+    @sentry_sdk.trace
     async def store_expertise_evidence(
         self,
         user_slack_id: str,
@@ -140,6 +140,7 @@ class StorageService:
 
             await session.commit()
 
+    @sentry_sdk.trace
     async def get_experts_for_skill(
         self, skill_key: str, limit: int = 10
     ) -> list[dict[str, Any]]:

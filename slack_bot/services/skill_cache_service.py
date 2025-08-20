@@ -4,6 +4,8 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
+import sentry_sdk
+
 from .expert_api_client import ExpertAPIClient, SkillInfo
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ class SkillCacheService:
         await self._ensure_cache_fresh()
         return self._domains.copy()
 
+    @sentry_sdk.trace
     async def get_skill_by_term(self, term: str) -> SkillInfo | None:
         """Find skill by name or alias (case-insensitive)"""
         await self._ensure_cache_fresh()
@@ -65,6 +68,7 @@ class SkillCacheService:
 
         return None
 
+    @sentry_sdk.trace
     async def refresh_cache(self) -> bool:
         """Force refresh the skill cache from Expert API"""
         async with self._refresh_lock:

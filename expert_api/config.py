@@ -41,6 +41,12 @@ class Settings(BaseSettings):
         "extra": "ignore"  # Ignore extra environment variables
     }
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Convert string environment variables to boolean for flags
+        if isinstance(self.debug, str):
+            self.debug = self.debug == "1"
+
 
 # Global settings instance
 settings = Settings()

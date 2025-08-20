@@ -1,6 +1,9 @@
 import asyncio
 import logging
+from datetime import UTC, datetime
 from typing import Any
+
+import sentry_sdk
 
 from processors.message_processor import MessageProcessor
 from services.queue_service import QueueService
@@ -35,8 +38,12 @@ class MessageWorker:
                         await asyncio.sleep(0.5)
                         continue
 
-                    # Process the message
-                    await self._process_task(task)
+                    with sentry_sdk.start_transaction(
+                        name="Process Message",
+                    ) as trx:
+                        trx.set_data("truffle.task.id", task.task_id)
+                        trx.set_data("truffle.worker.id", self.worker_id)
+                        await self._process_task(task)
 
                 except Exception as e:
                     logger.error(
@@ -54,9 +61,21 @@ class MessageWorker:
                 f"Worker {self.worker_id} stopped. Processed: {self.processed_count}, Errors: {self.error_count}"
             )
 
+    @sentry_sdk.trace(op="queue.process")
     async def _process_task(self, task) -> None:
         """Process a single message task"""
         try:
+            sentry_sdk.update_current_span(
+                attributes={
+                    "messaging.message.id": task.task_id,
+                    "messaging.destination.name": "pending_queue",
+                    "messaging.message.retry.count": task.retry_count,
+                    "messaging.message.receive.latency": int(
+                        (datetime.now(UTC) - task.created_at).total_seconds() * 1000
+                    ),
+                }
+            )
+
             logger.debug(f"Worker {self.worker_id} processing task {task.task_id}")
 
             # Process the message through the normal pipeline

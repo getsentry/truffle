@@ -1,5 +1,7 @@
 import json
 
+import sentry_sdk
+
 from processors.skill_matcher import Skill, SkillMatcher
 from services.storage_service import StorageService
 
@@ -9,6 +11,7 @@ class SkillService:
         self.matcher = None
         self._skills_cache = None
 
+    @sentry_sdk.trace
     async def _load_skills_from_db(self) -> list[Skill]:
         """Load skills from database and convert to Skill objects"""
         if self._skills_cache is not None:
@@ -39,6 +42,7 @@ class SkillService:
         self._skills_cache = skills
         return skills
 
+    @sentry_sdk.trace
     async def match_text(self, text: str) -> list[str]:
         """Extract skill keys from text using database taxonomy"""
         if not text:
@@ -50,6 +54,7 @@ class SkillService:
 
         return self.matcher.match_text(text)
 
+    @sentry_sdk.trace
     async def get_skill_info(self, skill_key: str):
         """Get skill information from matcher"""
         if self.matcher is None:
@@ -58,6 +63,7 @@ class SkillService:
 
         return self.matcher.describe(skill_key)
 
+    @sentry_sdk.trace
     async def reload_skills(self):
         """Force reload skills from database (clear cache)"""
         self._skills_cache = None

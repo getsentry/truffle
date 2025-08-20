@@ -3,6 +3,7 @@ from collections.abc import AsyncIterable
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
+import sentry_sdk
 from slack_sdk.web.async_client import AsyncWebClient
 
 from config import settings
@@ -13,6 +14,7 @@ class SlackService:
         self.client = AsyncWebClient(token=settings.slack_bot_auth_token)
         self._bot_user_id: str | None = None
 
+    @sentry_sdk.trace
     async def get_public_channels(
         self, exclude_archived: bool = True
     ) -> list[dict[str, Any]]:
@@ -36,6 +38,7 @@ class SlackService:
 
         return channels
 
+    @sentry_sdk.trace
     async def get_workspace_users(
         self,
         exclude_deleted: bool = True,
@@ -68,6 +71,7 @@ class SlackService:
 
         return users
 
+    @sentry_sdk.trace
     async def get_bot_user_id(self) -> str:
         """Get the bot's user ID using auth.test API"""
         if self._bot_user_id is None:
@@ -98,6 +102,7 @@ class SlackService:
             "raw_data": member,
         }
 
+    @sentry_sdk.trace
     async def get_recent_messages(
         self,
         channel_id: str,

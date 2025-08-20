@@ -1,14 +1,14 @@
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import and_, func, or_, select, text
-from sqlalchemy.orm import aliased
+import sentry_sdk
+from sqlalchemy import func, or_, select, text
 
-from database import AsyncSessionLocal, ExpertiseEvidence, Skill, User
+from database import AsyncSessionLocal, Skill
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class SortBy(Enum):
 @dataclass
 class ExpertQuery:
     """Configuration for expert search queries"""
+
     # Core search parameters
     skill_query: str = ""
     skill_keys: list[str] = field(default_factory=list)
@@ -41,7 +42,7 @@ class ExpertQuery:
 
     # Score calculation parameters
     time_decay_factor: float = 0.95  # Daily decay factor
-    negative_weight: float = 0.5     # How much to penalize negative signals
+    negative_weight: float = 0.5  # How much to penalize negative signals
 
     def __post_init__(self):
         if isinstance(self.sort_by, str):
@@ -51,6 +52,7 @@ class ExpertQuery:
 @dataclass
 class ExpertResult:
     """Result of an expert search"""
+
     # User information
     slack_id: str
     display_name: str
@@ -76,7 +78,7 @@ class ExpertResult:
             "user": {
                 "slack_id": self.slack_id,
                 "display_name": self.display_name,
-                "timezone": self.timezone
+                "timezone": self.timezone,
             },
             "expertise": {
                 "skill_name": self.skill_name,
@@ -84,14 +86,16 @@ class ExpertResult:
                 "score": round(self.expertise_score, 3),
                 "confidence_level": self.confidence_level,
                 "evidence_count": self.evidence_count,
-                "last_activity": self.last_activity_date.isoformat() if self.last_activity_date else None,
-                "trend": self.trend
+                "last_activity": self.last_activity_date.isoformat()
+                if self.last_activity_date
+                else None,
+                "trend": self.trend,
             },
             "evidence_summary": {
                 "positive_signals": self.positive_count,
                 "negative_signals": self.negative_count,
-                "neutral_signals": self.neutral_count
-            }
+                "neutral_signals": self.neutral_count,
+            },
         }
 
 
@@ -101,14 +105,20 @@ class ExpertSearchService:
     def __init__(self):
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    async def search_experts_by_skill_key(self, skill_key: str, query: ExpertQuery | None = None) -> list[ExpertResult]:
+    @sentry_sdk.trace
+    async def search_experts_by_skill_key(
+        self, skill_key: str, query: ExpertQuery | None = None
+    ) -> list[ExpertResult]:
         """Search experts by exact skill key (most efficient)"""
         if query is None:
             query = ExpertQuery()
         query.skill_keys = [skill_key]
         return await self._execute_expert_query(query)
 
-    async def search_experts_by_skill_name(self, skill_name: str, query: ExpertQuery | None = None) -> list[ExpertResult]:
+    @sentry_sdk.trace
+    async def search_experts_by_skill_name(
+        self, skill_name: str, query: ExpertQuery | None = None
+    ) -> list[ExpertResult]:
         """Search experts by skill name (user-friendly)"""
         if query is None:
             query = ExpertQuery()
@@ -122,7 +132,10 @@ class ExpertSearchService:
         query.skill_keys = skill_keys
         return await self._execute_expert_query(query)
 
-    async def search_experts_fuzzy(self, skill_query: str, query: ExpertQuery | None = None) -> list[ExpertResult]:
+    @sentry_sdk.trace
+    async def search_experts_fuzzy(
+        self, skill_query: str, query: ExpertQuery | None = None
+    ) -> list[ExpertResult]:
         """Search experts with fuzzy/partial matching"""
         if query is None:
             query = ExpertQuery()
@@ -136,7 +149,10 @@ class ExpertSearchService:
         query.skill_keys = skill_keys
         return await self._execute_expert_query(query)
 
-    async def search_experts_by_aliases(self, aliases: list[str], query: ExpertQuery | None = None) -> list[ExpertResult]:
+    @sentry_sdk.trace
+    async def search_experts_by_aliases(
+        self, aliases: list[str], query: ExpertQuery | None = None
+    ) -> list[ExpertResult]:
         """Search experts by skill aliases"""
         if query is None:
             query = ExpertQuery()
@@ -149,6 +165,7 @@ class ExpertSearchService:
         query.skill_keys = skill_keys
         return await self._execute_expert_query(query)
 
+    @sentry_sdk.trace
     async def _find_skills_by_name(self, name: str) -> list[str]:
         """Find skill keys by skill name (case insensitive)"""
         async with AsyncSessionLocal() as session:
@@ -159,6 +176,7 @@ class ExpertSearchService:
             )
             return [row.skill_key for row in result]
 
+    @sentry_sdk.trace
     async def _find_skills_fuzzy(self, query: str) -> list[str]:
         """Find skill keys using fuzzy/partial matching"""
         async with AsyncSessionLocal() as session:
@@ -169,7 +187,7 @@ class ExpertSearchService:
                     or_(
                         func.lower(Skill.name).like(search_pattern),
                         func.lower(Skill.skill_key).like(search_pattern),
-                        func.lower(Skill.aliases).like(search_pattern)
+                        func.lower(Skill.aliases).like(search_pattern),
                     )
                 )
             )
@@ -182,21 +200,21 @@ class ExpertSearchService:
 
             return [skill[0] for skill in skills]
 
+    @sentry_sdk.trace
     async def _find_skills_by_aliases(self, aliases: list[str]) -> list[str]:
         """Find skill keys by aliases (stored as JSON in aliases column)"""
         async with AsyncSessionLocal() as session:
             conditions = []
             for alias in aliases:
                 # Search in JSON aliases column
-                conditions.append(
-                    func.lower(Skill.aliases).like(f"%{alias.lower()}%")
-                )
+                conditions.append(func.lower(Skill.aliases).like(f"%{alias.lower()}%"))
 
             result = await session.execute(
                 select(Skill.skill_key).where(or_(*conditions))
             )
             return [row.skill_key for row in result]
 
+    @sentry_sdk.trace
     async def _execute_expert_query(self, query: ExpertQuery) -> list[ExpertResult]:
         """Execute the main expert query with advanced scoring and filtering"""
         if not query.skill_keys:
@@ -216,8 +234,8 @@ class ExpertSearchService:
                     "time_decay_factor": query.time_decay_factor,
                     "negative_weight": query.negative_weight,
                     "limit": query.limit,
-                    "offset": query.offset
-                }
+                    "offset": query.offset,
+                },
             )
 
             experts = []
@@ -229,17 +247,20 @@ class ExpertSearchService:
                     skill_name=row.skill_name,
                     skill_key=row.skill_key,
                     expertise_score=float(row.expertise_score),
-                    confidence_level=self._get_confidence_level(float(row.expertise_score)),
+                    confidence_level=self._get_confidence_level(
+                        float(row.expertise_score)
+                    ),
                     evidence_count=row.evidence_count,
                     positive_count=row.positive_count,
                     negative_count=row.negative_count,
                     neutral_count=row.neutral_count,
-                    last_activity_date=row.last_activity_date
+                    last_activity_date=row.last_activity_date,
                 )
                 experts.append(expert)
 
             return experts
 
+    @sentry_sdk.trace
     def _build_expert_sql_query(self, query: ExpertQuery) -> str:
         """Build SQL query with advanced scoring and time decay"""
 
@@ -247,7 +268,9 @@ class ExpertSearchService:
         where_conditions = ["s.skill_key = ANY(:skill_keys)"]
 
         if query.time_window_days > 0:
-            where_conditions.append("ee.evidence_date >= CURRENT_DATE - :time_window_days * INTERVAL '1 day'")
+            where_conditions.append(
+                "ee.evidence_date >= CURRENT_DATE - :time_window_days * INTERVAL '1 day'"
+            )
 
         if query.exclude_neutral:
             where_conditions.append("ee.label != 'neutral'")
@@ -308,6 +331,7 @@ class ExpertSearchService:
             LIMIT :limit OFFSET :offset
         """
 
+    @sentry_sdk.trace
     def _get_confidence_level(self, score: float) -> str:
         """Convert numeric score to confidence level"""
         if score >= 0.8:
@@ -317,17 +341,22 @@ class ExpertSearchService:
         else:
             return "low"
 
-    async def get_skill_suggestions(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+    @sentry_sdk.trace
+    async def get_skill_suggestions(
+        self, query: str, limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Get skill suggestions for autocomplete"""
         async with AsyncSessionLocal() as session:
             search_pattern = f"%{query.lower()}%"
             result = await session.execute(
-                select(Skill.skill_key, Skill.name, Skill.domain, Skill.aliases).where(
+                select(Skill.skill_key, Skill.name, Skill.domain, Skill.aliases)
+                .where(
                     or_(
                         func.lower(Skill.name).like(search_pattern),
-                        func.lower(Skill.skill_key).like(search_pattern)
+                        func.lower(Skill.skill_key).like(search_pattern),
                     )
-                ).limit(limit)
+                )
+                .limit(limit)
             )
 
             suggestions = []
@@ -339,11 +368,13 @@ class ExpertSearchService:
                     except (json.JSONDecodeError, TypeError):
                         aliases = []
 
-                suggestions.append({
-                    "skill_key": row.skill_key,
-                    "name": row.name,
-                    "domain": row.domain,
-                    "aliases": aliases
-                })
+                suggestions.append(
+                    {
+                        "skill_key": row.skill_key,
+                        "name": row.name,
+                        "domain": row.domain,
+                        "aliases": aliases,
+                    }
+                )
 
             return suggestions

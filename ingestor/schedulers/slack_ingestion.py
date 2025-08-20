@@ -2,6 +2,8 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
+import sentry_sdk
+
 from services.queue_service import get_queue_service
 from services.score_aggregation_service import get_aggregation_service
 from services.slack_service import SlackService
@@ -14,6 +16,7 @@ FIRST_RUN_HOURS = 24 * 30  # 30 days for initial historical import
 PERIODIC_RUN_HOURS = 1  # 1 hour for regular periodic runs
 
 
+@sentry_sdk.trace
 async def run_slack_ingestion():
     """Main ingestion task - runs periodically"""
     logger.info("Starting Slack ingestion run")

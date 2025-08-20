@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 from collections import deque
 from dataclasses import dataclass
@@ -6,6 +7,8 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 from uuid import uuid4
+
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,7 @@ class TaskStatus(Enum):
 @dataclass
 class MessageTask:
     """A task representing a message to be processed"""
+
     task_id: str
     message: dict[str, Any]
     channel: dict[str, Any]
@@ -48,18 +52,26 @@ class QueueService:
         self.failed_tasks: dict[str, MessageTask] = {}
         self._lock = asyncio.Lock()
 
+    @sentry_sdk.trace(op="queue.publish")
     async def enqueue_message(
         self,
         message: dict[str, Any],
         channel: dict[str, Any],
-        users: dict[str, dict[str, Any]]
+        users: dict[str, dict[str, Any]],
     ) -> str:
         """Add a message to the processing queue"""
+
+        task_id = str(uuid4())
+
+        sentry_sdk.update_current_span(
+            attributes={
+                "messaging.message.id": task_id,
+                "messaging.destination.name": "pending_queue",
+                "messaging.message.body.size": len(json.dumps(message).encode("utf-8")),
+            }
+        )
         task = MessageTask(
-            task_id=str(uuid4()),
-            message=message,
-            channel=channel,
-            users=users
+            task_id=task_id, message=message, channel=channel, users=users
         )
 
         async with self._lock:
@@ -104,13 +116,17 @@ class QueueService:
                     # Retry the task
                     task.status = TaskStatus.RETRYING
                     self.pending_queue.appendleft(task)  # Add to front for priority
-                    logger.warning(f"Retrying task {task_id} (attempt {task.retry_count})")
+                    logger.warning(
+                        f"Retrying task {task_id} (attempt {task.retry_count})"
+                    )
                 else:
                     # Max retries exceeded
                     task.status = TaskStatus.FAILED
                     task.completed_at = datetime.now(UTC)
                     self.failed_tasks[task_id] = task
-                    logger.error(f"Task {task_id} failed after {task.retry_count} attempts: {error_message}")
+                    logger.error(
+                        f"Task {task_id} failed after {task.retry_count} attempts: {error_message}"
+                    )
 
     async def get_queue_stats(self) -> dict[str, Any]:
         """Get current queue statistics"""
@@ -120,7 +136,7 @@ class QueueService:
                 "processing": len(self.processing_tasks),
                 "completed": len(self.completed_tasks),
                 "failed": len(self.failed_tasks),
-                "total_processed": len(self.completed_tasks) + len(self.failed_tasks)
+                "total_processed": len(self.completed_tasks) + len(self.failed_tasks),
             }
 
     async def get_recent_tasks(self, limit: int = 50) -> list[dict[str, Any]]:
@@ -129,38 +145,50 @@ class QueueService:
             all_tasks = []
 
             # Add recent completed tasks
-            for task in list(self.completed_tasks.values())[-limit//2:]:
-                all_tasks.append({
-                    "task_id": task.task_id,
-                    "status": task.status.value,
-                    "created_at": task.created_at.isoformat(),
-                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
-                    "retry_count": task.retry_count,
-                    "message_preview": task.message.get("text", "")[:100]
-                })
+            for task in list(self.completed_tasks.values())[-limit // 2 :]:
+                all_tasks.append(
+                    {
+                        "task_id": task.task_id,
+                        "status": task.status.value,
+                        "created_at": task.created_at.isoformat(),
+                        "completed_at": task.completed_at.isoformat()
+                        if task.completed_at
+                        else None,
+                        "retry_count": task.retry_count,
+                        "message_preview": task.message.get("text", "")[:100],
+                    }
+                )
 
             # Add recent failed tasks
-            for task in list(self.failed_tasks.values())[-limit//4:]:
-                all_tasks.append({
-                    "task_id": task.task_id,
-                    "status": task.status.value,
-                    "created_at": task.created_at.isoformat(),
-                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
-                    "retry_count": task.retry_count,
-                    "error_message": task.error_message,
-                    "message_preview": task.message.get("text", "")[:100]
-                })
+            for task in list(self.failed_tasks.values())[-limit // 4 :]:
+                all_tasks.append(
+                    {
+                        "task_id": task.task_id,
+                        "status": task.status.value,
+                        "created_at": task.created_at.isoformat(),
+                        "completed_at": task.completed_at.isoformat()
+                        if task.completed_at
+                        else None,
+                        "retry_count": task.retry_count,
+                        "error_message": task.error_message,
+                        "message_preview": task.message.get("text", "")[:100],
+                    }
+                )
 
             # Add currently processing tasks
             for task in list(self.processing_tasks.values()):
-                all_tasks.append({
-                    "task_id": task.task_id,
-                    "status": task.status.value,
-                    "created_at": task.created_at.isoformat(),
-                    "started_at": task.started_at.isoformat() if task.started_at else None,
-                    "retry_count": task.retry_count,
-                    "message_preview": task.message.get("text", "")[:100]
-                })
+                all_tasks.append(
+                    {
+                        "task_id": task.task_id,
+                        "status": task.status.value,
+                        "created_at": task.created_at.isoformat(),
+                        "started_at": task.started_at.isoformat()
+                        if task.started_at
+                        else None,
+                        "retry_count": task.retry_count,
+                        "message_preview": task.message.get("text", "")[:100],
+                    }
+                )
 
             # Sort by created_at (most recent first)
             all_tasks.sort(key=lambda x: x["created_at"], reverse=True)

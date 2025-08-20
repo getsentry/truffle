@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     slack_bot_url: str = Field(default="http://localhost:8003", alias="SLACK_BOT_URL")
 
     # Scheduling
-    ingestion_cron: str = "*/5 * * * *"  # Every 5 minutes
+    ingestion_cron: str = "*/1 * * * *"  # Every 5 minutes
 
     model_config = {
         "env_file": ".envrc",
@@ -56,6 +56,8 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Convert string environment variables to boolean for flags
+        if isinstance(self.debug, str):
+            self.debug = self.debug == "1"
         if isinstance(self.extract_skills, str):
             self.extract_skills = self.extract_skills == "1"
         if isinstance(self.classify_expertise, str):

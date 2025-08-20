@@ -4,6 +4,7 @@ import logging
 from datetime import date
 from typing import Any
 
+import sentry_sdk
 from sqlalchemy import delete, func, select, text
 
 from database import AsyncSessionLocal, ExpertiseEvidence, UserSkillScore
@@ -17,6 +18,7 @@ class ScoreAggregationService:
     def __init__(self):
         pass
 
+    @sentry_sdk.trace
     async def aggregate_all_scores(self) -> dict[str, Any]:
         """Recalculate all user skill scores from expertise evidence"""
         logger.info("Starting full score aggregation...")
@@ -78,6 +80,7 @@ class ScoreAggregationService:
                 "status": "completed",
             }
 
+    @sentry_sdk.trace
     async def update_user_skill_score(
         self,
         user_id: int,

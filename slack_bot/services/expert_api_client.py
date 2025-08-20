@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import httpx
+import sentry_sdk
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -89,6 +90,7 @@ class ExpertAPIClient:
             logger.error(f"Expert API health check failed: {e}")
             raise ExpertAPIError(f"Health check failed: {e.response.status_code}")
 
+    @sentry_sdk.trace
     async def search_experts(
         self, skills: list[str], limit: int = 10, min_confidence: float = 0.0
     ) -> ExpertSearchResponse:
@@ -132,6 +134,7 @@ class ExpertAPIClient:
             logger.error(f"Unexpected error during expert search: {e}")
             raise ExpertAPIError(f"Unexpected error: {e}")
 
+    @sentry_sdk.trace
     async def list_skills(self) -> SkillsResponse:
         """Get list of available skills"""
         try:

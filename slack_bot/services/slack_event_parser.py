@@ -4,6 +4,8 @@ import logging
 import re
 from typing import Any
 
+import sentry_sdk
+
 from models.slack_models import ParsedSlackMessage, SlackEventContext
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,7 @@ class SlackEventParser:
             "?",
         ]
 
+    @sentry_sdk.trace
     def parse_event(self, event_data: dict[str, Any]) -> SlackEventContext | None:
         """Parse a Slack event and return context information"""
         try:
@@ -77,6 +80,7 @@ class SlackEventParser:
             logger.error(f"Error parsing Slack event: {e}")
             return None
 
+    @sentry_sdk.trace
     def parse_message(self, event: dict[str, Any]) -> ParsedSlackMessage | None:
         """Parse a Slack message event into a structured format"""
         try:
@@ -118,6 +122,7 @@ class SlackEventParser:
             logger.error(f"Error parsing message: {e}")
             return None
 
+    @sentry_sdk.trace
     def _clean_message_text(self, text: str) -> str:
         """Clean Slack message text by removing mentions, links, and formatting"""
         # Remove user mentions
@@ -137,6 +142,7 @@ class SlackEventParser:
 
         return text.strip()
 
+    @sentry_sdk.trace
     def _extract_mentioned_users(self, text: str) -> list[str]:
         """Extract user IDs from mentions in the text"""
         mentions = self.mention_pattern.findall(text)

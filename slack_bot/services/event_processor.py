@@ -3,6 +3,8 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+import sentry_sdk
+
 from models.slack_models import ExpertQuery
 from services.query_parser import QueryParser
 from services.slack_event_parser import SlackEventParser
@@ -22,6 +24,7 @@ class EventProcessor:
         self.slack_parser = SlackEventParser(bot_user_id=bot_user_id)
         self.query_parser = QueryParser(skill_cache_service)
 
+    @sentry_sdk.trace
     async def process_slack_event(
         self, event_data: dict[str, Any]
     ) -> ExpertQuery | None:
@@ -76,6 +79,7 @@ class EventProcessor:
             logger.error(f"Error processing Slack event: {e}", exc_info=True)
             return None
 
+    @sentry_sdk.trace
     async def get_processing_stats(self) -> dict[str, Any]:
         """Get statistics about event processing"""
         skills = await self.query_parser.skill_cache_service.get_skills()

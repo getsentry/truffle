@@ -4,6 +4,8 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
+import sentry_sdk
+
 from models.slack_models import ExpertQuery, ParsedSlackMessage
 
 if TYPE_CHECKING:
@@ -64,6 +66,7 @@ class QueryParser:
             for pattern, query_type in self.query_patterns
         ]
 
+    @sentry_sdk.trace
     async def parse_query(self, message: ParsedSlackMessage) -> ExpertQuery | None:
         """Parse a message and extract an expert search query"""
         try:
@@ -121,6 +124,7 @@ class QueryParser:
             logger.error(f"Error parsing query: {e}")
             return None
 
+    @sentry_sdk.trace
     async def _extract_skills_from_text(self, text: str) -> list[str]:
         """Extract technology skills from text using database skills"""
         text_lower = text.lower()
@@ -157,6 +161,7 @@ class QueryParser:
 
         return unique_skills
 
+    @sentry_sdk.trace
     async def _find_compound_skills(self, text: str) -> list[str]:
         """Find compound/multi-word skills from database"""
         found = []
@@ -178,6 +183,7 @@ class QueryParser:
 
         return found
 
+    @sentry_sdk.trace
     def _calculate_confidence(
         self, text: str, skills: list[str], query_type: str
     ) -> float:
@@ -208,6 +214,7 @@ class QueryParser:
 
         return min(1.0, base_confidence)
 
+    @sentry_sdk.trace
     async def get_supported_skills(self) -> list[str]:
         """Get list of supported skills for validation"""
         skills = await self.skill_cache_service.get_skills()
