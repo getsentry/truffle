@@ -54,14 +54,20 @@ class EventProcessor:
                         return None
 
                     # Check if we should process this message
-                    if not self.slack_parser.should_process_message(parsed_message):
-                        logger.debug(
+                    should_process = self.slack_parser.should_process_message(
+                        parsed_message
+                    )
+                    logger.info(
+                        f"should_process_message returned: {should_process} for message: '{parsed_message.cleaned_text}'"
+                    )
+                    if not should_process:
+                        logger.info(
                             f"Message doesn't require processing: '{parsed_message.cleaned_text}'"
                         )
                         return None
 
                     # Extract expert query from the message
-                    logger.debug(
+                    logger.info(
                         f"EventProcessor calling query_parser.parse_query with message: '{parsed_message.cleaned_text}'"
                     )
                     expert_query = await self.query_parser.parse_query(parsed_message)

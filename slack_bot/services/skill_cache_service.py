@@ -74,9 +74,13 @@ class SkillCacheService:
         async with self._refresh_lock:
             try:
                 logger.info("Refreshing skill cache from Expert API...")
+                logger.info(
+                    f"Expert API client base URL: {self.expert_api_client.base_url}"
+                )
 
                 # Fetch skills from Expert API
                 skills_response = await self.expert_api_client.list_skills()
+                logger.info(f"Expert API returned {len(skills_response.skills)} skills")
 
                 # Update cache
                 self._skills = skills_response.skills
@@ -92,11 +96,21 @@ class SkillCacheService:
                     self._all_skill_terms.add(skill_name_lower)
 
                     # Add aliases if they exist
+                    logger.debug(
+                        f"Processing skill {skill.key}: name={skill.name}, aliases={getattr(skill, 'aliases', 'NO_ALIASES_ATTR')}"
+                    )
                     if hasattr(skill, "aliases") and skill.aliases:
+                        logger.debug(
+                            f"Skill {skill.key} has {len(skill.aliases)} aliases: {skill.aliases}"
+                        )
                         for alias in skill.aliases:
                             alias_lower = alias.lower()
                             self._skill_aliases.add(alias_lower)
                             self._all_skill_terms.add(alias_lower)
+                    else:
+                        logger.debug(
+                            f"Skill {skill.key} has no aliases or aliases attr missing"
+                        )
 
                 self._last_refresh = datetime.now()
 
@@ -109,7 +123,7 @@ class SkillCacheService:
                 return True
 
             except Exception as e:
-                logger.error(f"Failed to refresh skill cache: {e}")
+                logger.error(f"Failed to refresh skill cache: {e}", exc_info=True)
                 return False
 
     async def _ensure_cache_fresh(self):

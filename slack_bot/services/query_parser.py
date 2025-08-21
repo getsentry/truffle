@@ -40,9 +40,16 @@ class QueryParser:
                 r"need\s+(?:an?\s+)?expert\s+(?:in|on|with|for)\s+(.+?)(?:\?|$)",
                 "need_expert",
             ),
+            # "I need a/an [skill] expert" patterns
+            (r"(?:I\s+)?need\s+(?:an?\s+)?(.+?)\s+expert(?:\?|$)", "need_skill_expert"),
             (
                 r"looking for\s+(?:an?\s+)?expert\s+(?:in|on|with)\s+(.+?)(?:\?|$)",
                 "looking_for",
+            ),
+            # "Looking for [skill] expert" patterns
+            (
+                r"looking for\s+(?:an?\s+)?(.+?)\s+expert(?:\?|$)",
+                "looking_for_skill_expert",
             ),
             (r"anyone know\s+(?:about\s+)?(.+?)(?:\?|$)", "anyone_know"),
             (r"who should I ask about\s+(.+?)(?:\?|$)", "who_ask"),
@@ -52,6 +59,11 @@ class QueryParser:
             ),
             # "I need help with X" patterns
             (r"(?:I\s+)?need help\s+(?:with\s+)?(.+?)(?:\?|$)", "need_help"),
+            # "Find me a/an [skill] expert" patterns
+            (
+                r"find\s+(?:me\s+)?(?:an?\s+)?(.+?)\s+expert(?:\?|$)",
+                "find_skill_expert",
+            ),
             (
                 r"(?:can\s+)?(?:someone\s+)?help\s+(?:me\s+)?(?:with\s+)?(.+?)(?:\?|$)",
                 "help_request",
@@ -71,14 +83,20 @@ class QueryParser:
         """Parse a message and extract an expert search query"""
         try:
             text = message.cleaned_text
-            logger.debug(f"QueryParser.parse_query called with text: '{text}'")
+            logger.info(f"QueryParser.parse_query called with text: '{text}'")
 
             # Try to match against known patterns
+            logger.info(
+                f"Trying {len(self.compiled_patterns)} patterns against: '{text}'"
+            )
             for pattern, query_type in self.compiled_patterns:
                 match = pattern.search(text)
+                logger.debug(
+                    f"Pattern '{query_type}': {pattern.pattern} -> {'MATCH' if match else 'no match'}"
+                )
                 if match:
                     skill_text = match.group(1).strip()
-                    logger.debug(
+                    logger.info(
                         f"Pattern '{query_type}' matched! Extracted skill_text: '{skill_text}'"
                     )
                     (
@@ -86,6 +104,9 @@ class QueryParser:
                         is_partial,
                     ) = await self._extract_skills_from_text_with_match_type(skill_text)
 
+                    logger.info(
+                        f"Skill extraction result: {skills} (is_partial: {is_partial})"
+                    )
                     if skills:
                         confidence = self._calculate_confidence(
                             text, skills, query_type, is_partial
@@ -108,7 +129,7 @@ class QueryParser:
                         return query
 
             # Fallback: try to extract any tech skills mentioned
-            logger.debug(
+            logger.info(
                 f"No pattern matched, trying fallback skill extraction on: '{text}'"
             )
             (
@@ -164,20 +185,27 @@ class QueryParser:
 
         # Get all skill terms from database (names + aliases)
         all_skill_terms = await self.skill_cache_service.get_all_skill_terms()
-        logger.debug(f"Available skill terms count: {len(all_skill_terms)}")
+        logger.info(f"Available skill terms count: {len(all_skill_terms)}")
+        if len(all_skill_terms) == 0:
+            logger.error(
+                "CRITICAL: No skill terms available! Skill cache may be empty or Expert API connection failed"
+            )
 
         # Split text into potential skill tokens
         # Handle both spaces and common separators
         tokens = re.split(r"[,\s/&+\-]+", text_lower)
         tokens = [token.strip() for token in tokens if token.strip()]
+        logger.debug(f"Looking for tokens in skill terms: {tokens}")
 
         # Find exact matches against database skills
         found_skills = []
         for token in tokens:
-            logger.debug(
-                f"Checking token: '{token}' (in skill_terms: {token in all_skill_terms}, is_common_word: {token in words_to_remove})"
+            in_skill_terms = token in all_skill_terms
+            is_common_word = token in words_to_remove
+            logger.info(
+                f"Checking token: '{token}' (in skill_terms: {in_skill_terms}, is_common_word: {is_common_word})"
             )
-            if token in all_skill_terms and token not in words_to_remove:
+            if in_skill_terms and not is_common_word:
                 # Get the actual skill info to return the canonical name
                 skill_info = await self.skill_cache_service.get_skill_by_term(token)
                 if skill_info and skill_info.key not in found_skills:
@@ -290,7 +318,15 @@ class QueryParser:
             base_confidence = 0.5
 
         # Boost confidence for specific query types
-        high_confidence_types = ["who_knows", "expert_in", "find_expert"]
+        high_confidence_types = [
+            "who_knows",
+            "expert_in",
+            "find_expert",
+            "need_expert",
+            "need_skill_expert",
+            "find_skill_expert",
+            "looking_for_skill_expert",
+        ]
         if query_type in high_confidence_types:
             base_confidence = 0.9 if not is_partial_match else 0.7
 

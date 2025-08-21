@@ -43,6 +43,7 @@ class SkillInfo(BaseModel):
     key: str
     name: str
     domain: str | None = None
+    aliases: list[str] = Field(default_factory=list)
     expert_count: int = Field(default=0, ge=0)
 
 

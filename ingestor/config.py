@@ -43,8 +43,7 @@ class Settings(BaseSettings):
     slack_bot_url: str = Field(default="http://localhost:8003", alias="SLACK_BOT_URL")
 
     # Scheduling
-    ingestion_cron: str = "*/1 * * * *"  # Every 5 minutes
-
+    ingestion_cron: str = "*/1 * * * *"
     model_config = {
         "env_file": ".envrc",
         "case_sensitive": False,
