@@ -4,6 +4,30 @@
 
 The Expert API Service provides fast, read-only access to expert search functionality for the Truffle system. It offers RESTful endpoints for querying user expertise based on skills, technologies, or domains, with support for confidence filtering, time-based relevance, and flexible search strategies. The API serves as the backend for both the Slack Bot and any future integrations, delivering expert recommendations.
 
+## Configuration
+
+Configure the service by setting these environment variables:
+
+### Required
+- `TRUFFLE_DB_URL` - PostgreSQL database URL
+
+### Optional
+- `EXPERT_API_HOST` - Server host (default: `0.0.0.0`)
+- `EXPERT_API_PORT` - Server port (default: `8002`)
+- `EXPERT_API_WORKERS` - Number of worker processes (default: `1`)
+- `LOG_LEVEL` - Logging level (default: `INFO`)
+- `DEBUG` - Enable debug mode (default: `false`)
+- `INGESTOR_URL` - Ingestor service endpoint (default: `http://localhost:8001`)
+- `SLACK_BOT_URL` - Slack Bot endpoint (default: `http://localhost:8003`)
+- `EXPERT_API_SENTRY_DSN` - Sentry DSN for error tracking
+
+### Example
+```bash
+export TRUFFLE_DB_URL=postgresql://user:pass@postgres:5432/truffle
+export EXPERT_API_PORT=8002
+export EXPERT_API_WORKERS=4
+```
+
 ---
 Built by [Anton Pirker](https://github.com/antonpirker) during Sentry Hackweek 2025.
 
