@@ -84,9 +84,6 @@ class SlackEventParser:
             # Determine message characteristics
             is_app_mention = event_type == "app_mention"
             is_direct_message = event.get("channel_type") == "im"
-            is_question = (
-                True  # Process all messages, no question classification needed
-            )
 
             parsed_message = ParsedSlackMessage(
                 text=text,
@@ -95,7 +92,6 @@ class SlackEventParser:
                 channel_id=channel_id,
                 timestamp=timestamp,
                 thread_ts=thread_ts,
-                is_question=is_question,
                 is_app_mention=is_app_mention,
                 is_direct_message=is_direct_message,
                 mentioned_users=mentioned_users,

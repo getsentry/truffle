@@ -35,7 +35,6 @@ class ParsedSlackMessage(BaseModel):
     thread_ts: str | None = None
 
     # Extracted query information
-    is_question: bool = False
     extracted_skills: list[str] = Field(default_factory=list)
     query_type: str | None = None  # "who_knows", "expert_search", "help", etc.
 
