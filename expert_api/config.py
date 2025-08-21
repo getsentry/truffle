@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     service_version: str = VERSION
 
     debug: bool = Field(default=False, alias="DEBUG")
+    debug_sql: bool = Field(default=False, alias="DEBUG_SQL")
 
     # Server configuration
     expert_api_host: str = Field(default="0.0.0.0", alias="EXPERT_API_HOST")
@@ -41,6 +42,8 @@ class Settings(BaseSettings):
         # Convert string environment variables to boolean for flags
         if isinstance(self.debug, str):
             self.debug = self.debug == "1"
+        if isinstance(self.debug_sql, str):
+            self.debug_sql = self.debug_sql == "1"
 
 
 # Global settings instance

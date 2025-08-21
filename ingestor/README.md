@@ -33,6 +33,7 @@ Configure the service by setting these environment variables:
 
 ### Optional
 - `DEBUG` - Enable debug mode (default: `false`)
+- `DEBUG_SQL` - Enable SQL query logging (default: `false`)
 - `INGESTOR_HOST` - Server host (default: `0.0.0.0`)
 - `INGESTOR_PORT` - Server port (default: `8001`)
 - `INGESTOR_SENTRY_DSN` - Sentry DSN for error tracking

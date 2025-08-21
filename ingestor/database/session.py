@@ -5,7 +5,7 @@ from config import settings
 # Create async engine
 engine = create_async_engine(
     settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),
-    echo=True,
+    echo=settings.debug_sql,  # Enable SQL logging only if DEBUG_SQL=1
 )
 
 # Create async session factory

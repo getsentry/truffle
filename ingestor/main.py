@@ -24,6 +24,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Configure SQLAlchemy logging based on DEBUG_SQL setting
+sql_log_level = logging.INFO if settings.debug_sql else logging.WARNING
+logging.getLogger("sqlalchemy.engine").setLevel(sql_log_level)
+logging.getLogger("sqlalchemy.dialects").setLevel(sql_log_level)
+logging.getLogger("sqlalchemy.pool").setLevel(sql_log_level)
+
 # Global scheduler
 scheduler = AsyncIOScheduler()
 

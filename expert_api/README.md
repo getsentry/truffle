@@ -13,6 +13,7 @@ Configure the service by setting these environment variables:
 
 ### Optional
 - `DEBUG` - Enable debug mode (default: `false`)
+- `DEBUG_SQL` - Enable SQL query logging (default: `false`)
 - `EXPERT_API_HOST` - Server host (default: `0.0.0.0`)
 - `EXPERT_API_PORT` - Server port (default: `8002`)
 - `EXPERT_API_SENTRY_DSN` - Sentry DSN for error tracking
