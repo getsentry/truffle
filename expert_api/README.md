@@ -12,14 +12,11 @@ Configure the service by setting these environment variables:
 - `TRUFFLE_DB_URL` - PostgreSQL database URL
 
 ### Optional
+- `DEBUG` - Enable debug mode (default: `false`)
 - `EXPERT_API_HOST` - Server host (default: `0.0.0.0`)
 - `EXPERT_API_PORT` - Server port (default: `8002`)
-
-- `LOG_LEVEL` - Logging level (default: `INFO`)
-- `DEBUG` - Enable debug mode (default: `false`)
-
-
 - `EXPERT_API_SENTRY_DSN` - Sentry DSN for error tracking
+- `LOG_LEVEL` - Logging level (default: `INFO`)
 
 ### Example
 ```bash

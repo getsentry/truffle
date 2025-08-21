@@ -12,12 +12,11 @@ Configure the service by setting these environment variables:
 - `SLACK_BOT_AUTH_TOKEN` - Slack Bot OAuth token (xoxb-...)
 
 ### Optional
-- `SLACK_BOT_HOST` - Server host (default: `0.0.0.0`)
-- `SLACK_BOT_PORT` - Server port (default: `8003`)
-- `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
 - `EXPERT_API_URL` - Expert API endpoint (default: `http://localhost:8002`)
-
+- `LOG_LEVEL` - Logging level (default: `INFO`)
+- `SLACK_BOT_HOST` - Server host (default: `0.0.0.0`)
+- `SLACK_BOT_PORT` - Server port (default: `8003`)
 - `SLACK_BOT_SENTRY_DSN` - Sentry DSN for error tracking
 
 ### Example

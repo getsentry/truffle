@@ -9,16 +9,16 @@ The Ingestor Service is the core data processing component of Truffle that autom
 Configure the service by setting these environment variables:
 
 ### Required
-- `TRUFFLE_DB_URL` - PostgreSQL database URL
-- `SLACK_BOT_AUTH_TOKEN` - Slack Bot OAuth token (xoxb-...)
 - `OPENAI_API_KEY` - OpenAI API key for AI processing
+- `SLACK_BOT_AUTH_TOKEN` - Slack Bot OAuth token (xoxb-...)
+- `TRUFFLE_DB_URL` - PostgreSQL database URL
 
 ### Optional
+- `DEBUG` - Enable debug mode (default: `false`)
 - `INGESTOR_HOST` - Server host (default: `0.0.0.0`)
 - `INGESTOR_PORT` - Server port (default: `8001`)
-- `LOG_LEVEL` - Logging level (default: `INFO`)
-- `DEBUG` - Enable debug mode (default: `false`)
 - `INGESTOR_SENTRY_DSN` - Sentry DSN for error tracking
+- `LOG_LEVEL` - Logging level (default: `INFO`)
 
 ### Example
 ```bash
