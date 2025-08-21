@@ -31,8 +31,7 @@ class Settings(BaseSettings):
     # Sentry configuration
     sentry_dsn: str | None = Field(default=None, alias="EXPERT_API_SENTRY_DSN")
 
-    # Service URLs
-    ingestor_url: str = Field(default="http://localhost:8001", alias="INGESTOR_URL")
+
 
     model_config = {
         "env_file": ".envrc",
