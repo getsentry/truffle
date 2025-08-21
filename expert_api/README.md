@@ -14,7 +14,7 @@ Configure the service by setting these environment variables:
 ### Optional
 - `EXPERT_API_HOST` - Server host (default: `0.0.0.0`)
 - `EXPERT_API_PORT` - Server port (default: `8002`)
-- `EXPERT_API_WORKERS` - Number of worker processes (default: `1`)
+
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
 - `INGESTOR_URL` - Ingestor service endpoint (default: `http://localhost:8001`)
@@ -25,7 +25,7 @@ Configure the service by setting these environment variables:
 ```bash
 export TRUFFLE_DB_URL=postgresql://user:pass@postgres:5432/truffle
 export EXPERT_API_PORT=8002
-export EXPERT_API_WORKERS=4
+
 ```
 
 ---

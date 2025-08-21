@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # Server configuration
     expert_api_host: str = Field(default="0.0.0.0", alias="EXPERT_API_HOST")
     expert_api_port: int = Field(default=8002, alias="EXPERT_API_PORT")
-    expert_api_workers: int = Field(default=1, alias="EXPERT_API_WORKERS")
+
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
     # Database configuration
