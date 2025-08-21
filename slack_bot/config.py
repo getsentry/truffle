@@ -21,14 +21,14 @@ class Settings(BaseSettings):
     slack_bot_host: str = Field(default="0.0.0.0", alias="SLACK_BOT_HOST")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    # Sentry configuration
-    sentry_dsn: str | None = Field(default=None, alias="SLACK_BOT_SENTRY_DSN")
+    # Service URLs
+    expert_api_url: str = Field(default="http://localhost:8002", alias="EXPERT_API_URL")
 
     # Slack API Configuration
     slack_bot_auth_token: str = Field(default="", alias="SLACK_BOT_AUTH_TOKEN")
 
-    # Service URLs
-    expert_api_url: str = Field(default="http://localhost:8002", alias="EXPERT_API_URL")
+    # Sentry configuration
+    sentry_dsn: str | None = Field(default=None, alias="SLACK_BOT_SENTRY_DSN")
 
     model_config = {
         "env_file": ".envrc",

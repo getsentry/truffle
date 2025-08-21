@@ -4,12 +4,14 @@ services:
     build: .
     environment:
       - SERVICE_NAME=slack_bot
-      - SLACK_BOT_HOST=0.0.0.0
       - SLACK_BOT_PORT=8000
       - EXPERT_API_URL=http://expert-api:8000
-      # Add your Slack Bot specific env vars:
-      # - SLACK_BOT_AUTH_TOKEN=your_token_here
-      # - SENTRY_DSN=your_sentry_dsn_here
+      # Pass from host environment
+      - DEBUG
+      - LOG_LEVEL
+      - SLACK_BOT_AUTH_TOKEN
+      - SLACK_BOT_HOST
+      - SLACK_BOT_SENTRY_DSN
     ports:
       - "3001:8000"
     depends_on:
@@ -21,14 +23,15 @@ services:
     build: .
     environment:
       - SERVICE_NAME=ingestor
-      - INGESTOR_HOST=0.0.0.0
       - INGESTOR_PORT=8000
-      # Add your Ingestor specific env vars:
-      # - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/truffle
-      # - SLACK_API_TOKEN=your_slack_token_here
-      # - OPENAI_API_KEY=your_openai_key_here
-      # - SENTRY_DSN=your_sentry_dsn_here
-      # - INGESTION_CRON=0 */6 * * *
+      # Pass from host environment
+      - DEBUG
+      - INGESTOR_HOST
+      - INGESTOR_SENTRY_DSN
+      - LOG_LEVEL
+      - OPENAI_API_KEY
+      - SLACK_BOT_AUTH_TOKEN
+      - TRUFFLE_DB_URL
     ports:
       - "3002:8000"
     depends_on:
@@ -40,11 +43,13 @@ services:
     build: .
     environment:
       - SERVICE_NAME=expert_api
-      - EXPERT_API_HOST=0.0.0.0
       - EXPERT_API_PORT=8000
-      # Add your Expert API specific env vars:
-      # - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/truffle
-      # - SENTRY_DSN=your_sentry_dsn_here
+      # Pass from host environment
+      - DEBUG
+      - EXPERT_API_HOST
+      - EXPERT_API_SENTRY_DSN
+      - LOG_LEVEL
+      - TRUFFLE_DB_URL
     ports:
       - "3003:8000"
     depends_on:
