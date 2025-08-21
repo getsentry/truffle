@@ -38,7 +38,7 @@ class EventProcessor:
 
             # Only process events where the bot was mentioned or it's a DM
             if not context.bot_mentioned:
-                logger.info("Bot not mentioned, skipping event")
+                logger.debug("Bot not mentioned, skipping event")
                 return None
 
             # Extract the message from event_callback events
@@ -55,13 +55,13 @@ class EventProcessor:
 
                     # Check if we should process this message
                     if not self.slack_parser.should_process_message(parsed_message):
-                        logger.info(
+                        logger.debug(
                             f"Message doesn't require processing: '{parsed_message.cleaned_text}'"
                         )
                         return None
 
                     # Extract expert query from the message
-                    logger.info(
+                    logger.debug(
                         f"EventProcessor calling query_parser.parse_query with message: '{parsed_message.cleaned_text}'"
                     )
                     expert_query = await self.query_parser.parse_query(parsed_message)

@@ -71,21 +71,24 @@ class QueryParser:
         """Parse a message and extract an expert search query"""
         try:
             text = message.cleaned_text
-            logger.info(f"QueryParser.parse_query called with text: '{text}'")
+            logger.debug(f"QueryParser.parse_query called with text: '{text}'")
 
             # Try to match against known patterns
             for pattern, query_type in self.compiled_patterns:
                 match = pattern.search(text)
                 if match:
                     skill_text = match.group(1).strip()
-                    logger.info(
+                    logger.debug(
                         f"Pattern '{query_type}' matched! Extracted skill_text: '{skill_text}'"
                     )
-                    skills = await self._extract_skills_from_text(skill_text)
+                    (
+                        skills,
+                        is_partial,
+                    ) = await self._extract_skills_from_text_with_match_type(skill_text)
 
                     if skills:
                         confidence = self._calculate_confidence(
-                            text, skills, query_type
+                            text, skills, query_type, is_partial
                         )
 
                         query = ExpertQuery(
@@ -105,17 +108,23 @@ class QueryParser:
                         return query
 
             # Fallback: try to extract any tech skills mentioned
-            logger.info(
+            logger.debug(
                 f"No pattern matched, trying fallback skill extraction on: '{text}'"
             )
-            fallback_skills = await self._extract_skills_from_text(text)
+            (
+                fallback_skills,
+                is_partial,
+            ) = await self._extract_skills_from_text_with_match_type(text)
 
             if fallback_skills:
+                fallback_confidence = (
+                    0.3 if not is_partial else 0.2
+                )  # Even lower confidence for partial fallback
                 query = ExpertQuery(
                     original_text=message.text,
                     skills=fallback_skills,
                     query_type="general_mention",
-                    confidence=0.3,  # Lower confidence for fallback
+                    confidence=fallback_confidence,
                     user_id=message.user_id,
                     channel_id=message.channel_id,
                     thread_ts=message.thread_ts,
@@ -132,6 +141,20 @@ class QueryParser:
             return None
 
     @sentry_sdk.trace
+    async def _extract_skills_from_text_with_match_type(
+        self, text: str
+    ) -> tuple[list[str], bool]:
+        """Extract technology skills from text, returning skills and whether partial matching was used"""
+        skills = await self._extract_skills_from_text(text)
+        # For now, track this in the logs - more sophisticated tracking could be added later
+        is_partial = (
+            "partial" in str(self._last_extraction_method)
+            if hasattr(self, "_last_extraction_method")
+            else False
+        )
+        return skills, is_partial
+
+    @sentry_sdk.trace
     async def _extract_skills_from_text(self, text: str) -> list[str]:
         """Extract technology skills from text using database skills"""
         text_lower = text.lower()
@@ -142,7 +165,6 @@ class QueryParser:
         # Get all skill terms from database (names + aliases)
         all_skill_terms = await self.skill_cache_service.get_all_skill_terms()
         logger.debug(f"Available skill terms count: {len(all_skill_terms)}")
-        logger.debug(f"Sample skill terms: {sorted(list(all_skill_terms))[:10]}")
 
         # Split text into potential skill tokens
         # Handle both spaces and common separators
@@ -152,15 +174,29 @@ class QueryParser:
         # Find exact matches against database skills
         found_skills = []
         for token in tokens:
+            logger.debug(
+                f"Checking token: '{token}' (in skill_terms: {token in all_skill_terms}, is_common_word: {token in words_to_remove})"
+            )
             if token in all_skill_terms and token not in words_to_remove:
                 # Get the actual skill info to return the canonical name
                 skill_info = await self.skill_cache_service.get_skill_by_term(token)
                 if skill_info and skill_info.key not in found_skills:
+                    logger.debug(f"Found skill: {skill_info.key} for token: {token}")
                     found_skills.append(skill_info.key)
 
         # Look for compound/multi-word skills from database
         compound_skills = await self._find_compound_skills(text_lower)
         found_skills.extend(compound_skills)
+
+        # If no exact matches found, try partial matching for multi-word skills
+        if not found_skills:
+            partial_skills = await self._find_partial_matches(tokens, all_skill_terms)
+            found_skills.extend(partial_skills)
+            if partial_skills:
+                self._last_extraction_method = "partial_matching"
+            logger.debug(f"Partial matching found: {partial_skills}")
+        else:
+            self._last_extraction_method = "exact_matching"
 
         # Remove duplicates while preserving order
         unique_skills = []
@@ -168,6 +204,7 @@ class QueryParser:
             if skill not in unique_skills:
                 unique_skills.append(skill)
 
+        logger.debug(f"Final unique skills: {unique_skills}")
         return unique_skills
 
     @sentry_sdk.trace
@@ -193,16 +230,69 @@ class QueryParser:
         return found
 
     @sentry_sdk.trace
+    async def _find_partial_matches(
+        self, tokens: list[str], all_skill_terms: set[str]
+    ) -> list[str]:
+        """Find skills where user tokens partially match multi-word skill names/aliases"""
+        found = []
+        words_to_remove = {
+            "and",
+            "or",
+            "with",
+            "in",
+            "on",
+            "at",
+            "the",
+            "a",
+            "an",
+            "stuff",
+            "things",
+        }
+
+        # Filter tokens to exclude common words
+        meaningful_tokens = [
+            token for token in tokens if token not in words_to_remove and len(token) > 2
+        ]
+
+        logger.debug(f"Meaningful tokens for partial matching: {meaningful_tokens}")
+
+        # Check each meaningful token against all skill terms
+        for token in meaningful_tokens:
+            # Find skill terms that contain this token
+            matching_terms = [term for term in all_skill_terms if token in term]
+            logger.debug(
+                f"Token '{token}' matches terms: {matching_terms[:5]}..."
+            )  # Log first 5
+
+            for term in matching_terms:
+                skill_info = await self.skill_cache_service.get_skill_by_term(term)
+                if skill_info and skill_info.key not in found:
+                    logger.debug(
+                        f"Partial match: '{token}' -> '{term}' -> skill '{skill_info.key}'"
+                    )
+                    found.append(skill_info.key)
+
+        return found
+
+    @sentry_sdk.trace
     def _calculate_confidence(
-        self, text: str, skills: list[str], query_type: str
+        self,
+        text: str,
+        skills: list[str],
+        query_type: str,
+        is_partial_match: bool = False,
     ) -> float:
         """Calculate confidence score for the parsed query"""
         base_confidence = 0.7
 
+        # Reduce confidence for partial matches
+        if is_partial_match:
+            base_confidence = 0.5
+
         # Boost confidence for specific query types
         high_confidence_types = ["who_knows", "expert_in", "find_expert"]
         if query_type in high_confidence_types:
-            base_confidence = 0.9
+            base_confidence = 0.9 if not is_partial_match else 0.7
 
         # Boost confidence if multiple skills found
         if len(skills) > 1:
