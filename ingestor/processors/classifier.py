@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -13,6 +14,7 @@ except Exception:  # pragma: no cover
 
 
 DEFAULT_MODEL = "gpt-4o"
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -97,14 +99,55 @@ async def classify_messages(
 
         # Run the OpenAI API call in a thread pool to avoid blocking
         resp = await asyncio.to_thread(
-            client.chat.completions.create,  # type: ignore[call-arg]
+            client.chat.completions.create,  # type: ignore
             model=use_model,
-            messages=messages,  # type: ignore[arg-type]
+            messages=messages,  # type: ignore
             temperature=0.0,
         )
 
-        raw = resp.choices[0].message.content or "{}"
-        parsed = json.loads(raw)
+        # Handle potential issues with the OpenAI response
+        try:
+            if not resp.choices:
+                logger.error(
+                    f"OpenAI returned no choices for message {candidate.message_id}"
+                )
+                raw = "{}"
+            elif not resp.choices[0].message:
+                logger.error(
+                    f"OpenAI choice has no message for message {candidate.message_id}"
+                )
+                raw = "{}"
+            else:
+                raw = resp.choices[0].message.content or ""
+
+            # Check for empty responses
+            if not raw.strip():
+                logger.error(
+                    f"OpenAI returned empty response for message {candidate.message_id}"
+                )
+                logger.error(f"Message text preview: {candidate.text[:200]}")
+                logger.error(f"Skills being classified: {candidate.skill_keys}")
+                raw = '{"results": []}'
+
+            # Try to parse the JSON response
+            parsed = json.loads(raw.strip())
+
+        except json.JSONDecodeError as e:
+            logger.error(
+                f"Failed to parse OpenAI response as JSON for message {candidate.message_id}"
+            )
+            logger.error(
+                f"Raw response content: {repr(raw[:500])}"
+            )  # Limit output length
+            logger.error(f"JSON error: {e}")
+            logger.error(f"Message text preview: {candidate.text[:200]}")
+            # Fallback to empty results
+            parsed = {"results": []}
+        except Exception as e:
+            logger.error(
+                f"Unexpected error processing OpenAI response for message {candidate.message_id}: {e}"
+            )
+            parsed = {"results": []}
         items: list[dict[str, Any]] = (
             [i for i in parsed.get("results", []) if isinstance(i, dict)]
             if isinstance(parsed, dict)
