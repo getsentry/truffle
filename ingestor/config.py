@@ -39,6 +39,9 @@ class Settings(BaseSettings):
 
     # Scheduling
     ingestion_cron: str = "*/1 * * * *"
+
+    # Slack API rate limiting (seconds between requests)
+    slack_api_delay: float = Field(default=1.2, alias="SLACK_API_DELAY")
     model_config = {
         "env_file": ".envrc",
         "case_sensitive": False,

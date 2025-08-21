@@ -53,6 +53,9 @@ async def run_slack_ingestion():
         for channel in channels:
             logger.info(f"Enqueuing messages from channel: {channel['name']}")
 
+            # Add delay between channels to reduce API pressure
+            await asyncio.sleep(2.0)
+
             try:
                 # Get messages since last run (or longer window for first run)
                 async for message in slack_service.get_recent_messages(
@@ -70,9 +73,11 @@ async def run_slack_ingestion():
                     messages_enqueued += 1
 
                     # Small batch processing - enqueue in batches to avoid overwhelming
-                    if messages_enqueued % 100 == 0:
+                    if messages_enqueued % 50 == 0:  # More frequent progress updates
                         logger.info(f"Enqueued {messages_enqueued} messages so far...")
-                        await asyncio.sleep(0.1)  # Brief pause between batches
+                        await asyncio.sleep(
+                            0.5
+                        )  # Longer pause to help with rate limiting
 
             except Exception as e:
                 logger.error(

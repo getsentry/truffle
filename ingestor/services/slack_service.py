@@ -1,18 +1,51 @@
+import asyncio
+import logging
 import re
 from collections.abc import AsyncIterable
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 import sentry_sdk
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class SlackService:
     def __init__(self):
         self.client = AsyncWebClient(token=settings.slack_bot_auth_token)
         self._bot_user_id: str | None = None
+
+    async def _rate_limited_api_call(self, api_call, max_retries: int = 3):
+        """Make API call with exponential backoff on rate limiting"""
+        for attempt in range(max_retries):
+            try:
+                # Always add base delay before API calls
+                await asyncio.sleep(settings.slack_api_delay)
+                return await api_call()
+            except SlackApiError as e:
+                if e.response["error"] == "ratelimited" and attempt < max_retries - 1:
+                    # Get retry-after header if available, else use exponential backoff
+                    retry_after = e.response.get("headers", {}).get("Retry-After")
+                    if retry_after:
+                        delay = float(retry_after) + 1  # Add 1 second buffer
+                    else:
+                        # Exponential backoff
+                        delay = (2**attempt) * settings.slack_api_delay
+
+                    logger.warning(
+                        f"Rate limited by Slack API "
+                        f"(attempt {attempt + 1}/{max_retries}), "
+                        f"waiting {delay:.1f} seconds..."
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    raise
+
+        raise Exception(f"Failed after {max_retries} attempts due to rate limiting")
 
     @sentry_sdk.trace
     async def get_public_channels(
@@ -23,11 +56,13 @@ class SlackService:
         cursor = None
 
         while True:
-            resp = await self.client.users_conversations(
-                types="public_channel",
-                exclude_archived=exclude_archived,
-                limit=1000,
-                cursor=cursor,
+            resp = await self._rate_limited_api_call(
+                lambda c=cursor: self.client.users_conversations(
+                    types="public_channel",
+                    exclude_archived=exclude_archived,
+                    limit=1000,
+                    cursor=c,
+                )
             )
             resp_data = cast(dict[str, Any], resp.data)
             channels.extend(resp_data.get("channels", []))
@@ -49,7 +84,9 @@ class SlackService:
         cursor = None
 
         while True:
-            resp = await self.client.users_list(limit=1000, cursor=cursor)
+            resp = await self._rate_limited_api_call(
+                lambda c=cursor: self.client.users_list(limit=1000, cursor=c)
+            )
             resp_data = cast(dict[str, Any], resp.data)
 
             for member in resp_data.get("members", []):
@@ -118,11 +155,13 @@ class SlackService:
         cursor = None
 
         while True:
-            resp = await self.client.conversations_history(
-                channel=channel_id,
-                oldest=oldest,
-                limit=page_size,
-                cursor=cursor,
+            resp = await self._rate_limited_api_call(
+                lambda c=cursor: self.client.conversations_history(
+                    channel=channel_id,
+                    oldest=oldest,
+                    limit=page_size,
+                    cursor=c,
+                )
             )
             resp_data = cast(dict[str, Any], resp.data)
 
@@ -146,11 +185,15 @@ class SlackService:
                     thread_cursor = None
 
                     while True:
-                        thread_response = await self.client.conversations_replies(
-                            channel=channel_id,
-                            ts=parent_ts,
-                            limit=thread_page_size,
-                            cursor=thread_cursor,
+                        thread_response = await self._rate_limited_api_call(
+                            lambda ts=parent_ts, tc=thread_cursor: (
+                                self.client.conversations_replies(
+                                    channel=channel_id,
+                                    ts=ts,
+                                    limit=thread_page_size,
+                                    cursor=tc,
+                                )
+                            )
                         )
                         thread_response_data = cast(
                             dict[str, Any], thread_response.data

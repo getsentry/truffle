@@ -38,6 +38,7 @@ Configure the service by setting these environment variables:
 - `INGESTOR_PORT` - Server port (default: `8001`)
 - `INGESTOR_SENTRY_DSN` - Sentry DSN for error tracking
 - `LOG_LEVEL` - Logging level (default: `INFO`)
+- `SLACK_API_DELAY` - Delay between Slack API calls in seconds (default: `1.2`)
 
 ### Example
 ```bash
