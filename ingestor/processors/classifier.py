@@ -17,6 +17,46 @@ DEFAULT_MODEL = "gpt-4o"
 logger = logging.getLogger(__name__)
 
 
+def _clean_openai_response(raw_response: str) -> str:
+    """Clean OpenAI response by removing markdown code fences and handling truncation"""
+    cleaned = raw_response.strip()
+
+    # Remove markdown code fences
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]  # Remove ```json
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]  # Remove ```
+
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]  # Remove trailing ```
+
+    cleaned = cleaned.strip()
+
+    # Handle truncated JSON by attempting to fix common issues
+    if cleaned and not cleaned.endswith("}") and not cleaned.endswith("]"):
+        logger.warning(
+            "Detected potentially truncated OpenAI response, attempting to fix..."
+        )
+
+        # Try to close incomplete JSON structures
+        open_braces = cleaned.count("{") - cleaned.count("}")
+        open_brackets = cleaned.count("[") - cleaned.count("]")
+
+        # Close incomplete strings if needed
+        if cleaned.count('"') % 2 != 0:
+            cleaned += '"'
+
+        # Close incomplete objects/arrays
+        for _ in range(open_braces):
+            cleaned += "}"
+        for _ in range(open_brackets):
+            cleaned += "]"
+
+        logger.info(f"Attempted to fix truncated response: {cleaned[:200]}...")
+
+    return cleaned
+
+
 @dataclass(frozen=True)
 class MessageCandidate:
     message_id: str
@@ -129,23 +169,25 @@ async def classify_messages(
                 logger.error(f"Skills being classified: {candidate.skill_keys}")
                 raw = '{"results": []}'
 
-            # Try to parse the JSON response
-            parsed = json.loads(raw.strip())
+            # Clean and parse the JSON response
+            cleaned_raw = _clean_openai_response(raw.strip())
+            parsed = json.loads(cleaned_raw)
 
         except json.JSONDecodeError as e:
             logger.error(
-                f"Failed to parse OpenAI response as JSON for message {candidate.message_id}"
+                f"Failed to parse OpenAI response as JSON for "
+                f"message {candidate.message_id}"
             )
-            logger.error(
-                f"Raw response content: {repr(raw[:500])}"
-            )  # Limit output length
+            logger.error(f"Original raw response: {repr(raw[:500])}")
+            logger.error(f"Cleaned response: {repr(cleaned_raw[:500])}")
             logger.error(f"JSON error: {e}")
             logger.error(f"Message text preview: {candidate.text[:200]}")
             # Fallback to empty results
             parsed = {"results": []}
         except Exception as e:
             logger.error(
-                f"Unexpected error processing OpenAI response for message {candidate.message_id}: {e}"
+                f"Unexpected error processing OpenAI response for "
+                f"message {candidate.message_id}: {e}"
             )
             parsed = {"results": []}
         items: list[dict[str, Any]] = (
