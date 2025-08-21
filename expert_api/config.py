@@ -33,7 +33,6 @@ class Settings(BaseSettings):
 
     # Service URLs
     ingestor_url: str = Field(default="http://localhost:8001", alias="INGESTOR_URL")
-    slack_bot_url: str = Field(default="http://localhost:8003", alias="SLACK_BOT_URL")
 
     model_config = {
         "env_file": ".envrc",

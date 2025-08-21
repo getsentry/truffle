@@ -18,7 +18,7 @@ Configure the service by setting these environment variables:
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
 - `INGESTOR_URL` - Ingestor service endpoint (default: `http://localhost:8001`)
-- `SLACK_BOT_URL` - Slack Bot endpoint (default: `http://localhost:8003`)
+
 - `EXPERT_API_SENTRY_DSN` - Sentry DSN for error tracking
 
 ### Example
