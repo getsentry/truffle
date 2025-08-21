@@ -18,7 +18,7 @@ Configure the service by setting these environment variables:
 - `INGESTOR_PORT` - Server port (default: `8001`)
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
-- `EXTRACT_SKILLS` - Enable skill extraction (default: `false`)
+
 - `CLASSIFY_EXPERTISE` - Enable expertise classification (default: `false`)
 - `EXPERT_API_URL` - Expert API endpoint (default: `http://localhost:8002`)
 - `SLACK_BOT_URL` - Slack Bot endpoint (default: `http://localhost:8003`)
@@ -29,7 +29,7 @@ Configure the service by setting these environment variables:
 export TRUFFLE_DB_URL=postgresql://user:pass@postgres:5432/truffle
 export SLACK_BOT_AUTH_TOKEN=xoxb-your-token-here
 export OPENAI_API_KEY=sk-your-openai-key
-export EXTRACT_SKILLS=true
+
 export CLASSIFY_EXPERTISE=true
 ```
 

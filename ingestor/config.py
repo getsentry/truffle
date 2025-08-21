@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     sentry_dsn: str | None = Field(default=None, alias="INGESTOR_SENTRY_DSN")
 
     # Processing flags
-    extract_skills: bool = Field(default=False, alias="EXTRACT_SKILLS")
     classify_expertise: bool = Field(default=False, alias="CLASSIFY_EXPERTISE")
 
     # Service URLs
@@ -58,8 +57,6 @@ class Settings(BaseSettings):
         # Convert string environment variables to boolean for flags
         if isinstance(self.debug, str):
             self.debug = self.debug == "1"
-        if isinstance(self.extract_skills, str):
-            self.extract_skills = self.extract_skills == "1"
         if isinstance(self.classify_expertise, str):
             self.classify_expertise = self.classify_expertise == "1"
 

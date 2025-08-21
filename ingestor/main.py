@@ -155,7 +155,6 @@ async def health_check():
         "jobs_count": len(jobs),
         "next_run": next_run,
         "settings": {
-            "extract_skills": settings.extract_skills,
             "classify_expertise": settings.classify_expertise,
             "ingestion_cron": settings.ingestion_cron,
         },

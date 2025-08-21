@@ -38,9 +38,6 @@ class MessageProcessor:
         logger.debug(f"Processing message from {user_id}: {text[:100]}...")
 
         # 1. Extract skills
-        if not settings.extract_skills:
-            return
-
         matched_skills = await self.skill_service.match_text(text)
         if not matched_skills:
             logger.debug("No skills matched in message")
