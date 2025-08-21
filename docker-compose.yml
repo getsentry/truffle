@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Slack Bot Service
+  slack-bot:
+    build: .
+    environment:
+      - SERVICE_NAME=slack_bot
+      - SLACK_BOT_HOST=0.0.0.0
+      - SLACK_BOT_PORT=8000
+      - EXPERT_API_URL=http://expert-api:8000
+      # Add your Slack Bot specific env vars:
+      # - SLACK_BOT_AUTH_TOKEN=your_token_here
+      # - SENTRY_DSN=your_sentry_dsn_here
+    ports:
+      - "3001:8000"
+    depends_on:
+      - expert-api
+    restart: unless-stopped
+
+  # Ingestor Service
+  ingestor:
+    build: .
+    environment:
+      - SERVICE_NAME=ingestor
+      - INGESTOR_HOST=0.0.0.0
+      - INGESTOR_PORT=8000
+      # Add your Ingestor specific env vars:
+      # - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/truffle
+      # - SLACK_API_TOKEN=your_slack_token_here
+      # - OPENAI_API_KEY=your_openai_key_here
+      # - SENTRY_DSN=your_sentry_dsn_here
+      # - INGESTION_CRON=0 */6 * * *
+    ports:
+      - "3002:8000"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Expert API Service
+  expert-api:
+    build: .
+    environment:
+      - SERVICE_NAME=expert_api
+      - EXPERT_API_HOST=0.0.0.0
+      - EXPERT_API_PORT=8000
+      # Add your Expert API specific env vars:
+      # - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/truffle
+      # - SENTRY_DSN=your_sentry_dsn_here
+    ports:
+      - "3003:8000"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: truffle
+      POSTGRES_USER: truffle_user
+      POSTGRES_PASSWORD: truffle_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./doc/setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

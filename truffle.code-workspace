@@ -13,5 +13,9 @@
 			"path": "expert_api"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.words": [
+			"ingestor"
+		]
+	}
 }
