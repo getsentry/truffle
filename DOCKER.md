@@ -70,33 +70,6 @@ docker-compose up
    ```
 3. Deploy: `docker-compose up -d`
 
-### Using Container Orchestration
-
-For Kubernetes, create separate deployments:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: truffle-slack-bot
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: truffle-slack-bot
-  template:
-    metadata:
-      labels:
-        app: truffle-slack-bot
-    spec:
-      containers:
-      - name: slack-bot
-        image: truffle:latest
-        env:
-        - name: SERVICE_NAME
-          value: "slack_bot"
-        # ... other env vars
-```
 
 ## Health Checks
 

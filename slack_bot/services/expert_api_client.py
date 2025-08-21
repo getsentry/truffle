@@ -81,11 +81,14 @@ class ExpertAPIClient:
     async def health_check(self) -> dict[str, Any]:
         """Check Expert API health"""
         try:
+            logger.info(f"Checking Expert API health at: {self.base_url}/health")
             response = await self.client.get(f"{self.base_url}/health")
             response.raise_for_status()
+            logger.info("Expert API health check successful")
             return response.json()
         except httpx.RequestError as e:
             logger.error(f"Failed to connect to Expert API: {e}")
+            logger.error(f"Connection details: {self.base_url}")
             raise ExpertAPIError(f"Connection failed: {e}")
         except httpx.HTTPStatusError as e:
             logger.error(f"Expert API health check failed: {e}")
