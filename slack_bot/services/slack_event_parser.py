@@ -23,27 +23,7 @@ class SlackEventParser:
         self.url_pattern = re.compile(r"<https?://[^>]+>")
         self.formatting_pattern = re.compile(r"[*_~`]")
 
-        # Question indicators
-        self.question_indicators = [
-            "who knows",
-            "who is",
-            "who can",
-            "who has",
-            "find expert",
-            "find someone",
-            "need help",
-            "need expert",
-            "need a",
-            "need an",
-            "looking for",
-            "expert for",
-            "expert in",
-            "expert on",
-            "help with",
-            "advice on",
-            "guidance on",
-            "?",
-        ]
+        # Question indicators removed - we process all messages for skill extraction
 
     @sentry_sdk.trace
     def parse_event(self, event_data: dict[str, Any]) -> SlackEventContext | None:
@@ -104,7 +84,9 @@ class SlackEventParser:
             # Determine message characteristics
             is_app_mention = event_type == "app_mention"
             is_direct_message = event.get("channel_type") == "im"
-            is_question = self._is_question(cleaned_text)
+            is_question = (
+                True  # Process all messages, no question classification needed
+            )
 
             parsed_message = ParsedSlackMessage(
                 text=text,
@@ -160,52 +142,18 @@ class SlackEventParser:
 
         return user_ids
 
-    def _is_question(self, text: str) -> bool:
-        """Determine if the text appears to be a question"""
-        text_lower = text.lower()
-
-        # Check for question mark
-        if "?" in text:
-            return True
-
-        # Check for question indicators
-        for indicator in self.question_indicators:
-            if indicator in text_lower:
-                return True
-
-        # Check for question word patterns at the beginning
-        question_words = [
-            "who",
-            "what",
-            "where",
-            "when",
-            "why",
-            "how",
-            "which",
-            "can",
-            "could",
-            "would",
-            "should",
-        ]
-        first_word = text_lower.split()[0] if text_lower.split() else ""
-
-        return first_word in question_words
+    # Question detection method removed - we now process all messages
 
     def should_process_message(self, parsed_message: ParsedSlackMessage) -> bool:
         """Determine if this message should be processed for expert search"""
-        # Process if it's a question and either:
+        # Process every message that:
         # 1. Bot was mentioned (@truffle)
         # 2. It's a direct message
-        # 3. It contains expert-related keywords
-
-        if not parsed_message.is_question:
-            return False
+        # We'll do skill extraction on all of these regardless of question format
 
         if parsed_message.is_app_mention or parsed_message.is_direct_message:
             return True
 
-        # Check for expert-related keywords
-        text_lower = parsed_message.cleaned_text.lower()
-        expert_keywords = ["expert", "knows", "help with", "advice", "guidance"]
-
-        return any(keyword in text_lower for keyword in expert_keywords)
+        # For other messages, we could add expert-related keyword filtering here
+        # but for now, return False for non-mentions/non-DMs
+        return False
