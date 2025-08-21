@@ -71,12 +71,16 @@ class QueryParser:
         """Parse a message and extract an expert search query"""
         try:
             text = message.cleaned_text
+            logger.info(f"QueryParser.parse_query called with text: '{text}'")
 
             # Try to match against known patterns
             for pattern, query_type in self.compiled_patterns:
                 match = pattern.search(text)
                 if match:
                     skill_text = match.group(1).strip()
+                    logger.info(
+                        f"Pattern '{query_type}' matched! Extracted skill_text: '{skill_text}'"
+                    )
                     skills = await self._extract_skills_from_text(skill_text)
 
                     if skills:
@@ -101,6 +105,9 @@ class QueryParser:
                         return query
 
             # Fallback: try to extract any tech skills mentioned
+            logger.info(
+                f"No pattern matched, trying fallback skill extraction on: '{text}'"
+            )
             fallback_skills = await self._extract_skills_from_text(text)
 
             if fallback_skills:
@@ -134,6 +141,8 @@ class QueryParser:
 
         # Get all skill terms from database (names + aliases)
         all_skill_terms = await self.skill_cache_service.get_all_skill_terms()
+        logger.debug(f"Available skill terms count: {len(all_skill_terms)}")
+        logger.debug(f"Sample skill terms: {sorted(list(all_skill_terms))[:10]}")
 
         # Split text into potential skill tokens
         # Handle both spaces and common separators
