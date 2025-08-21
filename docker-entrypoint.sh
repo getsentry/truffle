@@ -12,19 +12,19 @@ case "$SERVICE_NAME" in
   "slack_bot")
     echo "Launching Slack Bot service..."
     cd /app/slack_bot
-    exec uv run python main.py
+    exec python main.py
     ;;
 
   "ingestor")
     echo "Launching Ingestor service..."
     cd /app/ingestor
-    exec uv run python main.py
+    exec python main.py
     ;;
 
   "expert_api")
     echo "Launching Expert API service..."
     cd /app/expert_api
-    exec uv run python main.py
+    exec python main.py
     ;;
 
   *)
