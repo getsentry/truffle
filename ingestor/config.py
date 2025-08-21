@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     sentry_dsn: str | None = Field(default=None, alias="INGESTOR_SENTRY_DSN")
 
     # Processing flags
-    classify_expertise: bool = Field(default=False, alias="CLASSIFY_EXPERTISE")
 
     # Service URLs
     expert_api_url: str = Field(default="http://localhost:8002", alias="EXPERT_API_URL")
@@ -57,8 +56,6 @@ class Settings(BaseSettings):
         # Convert string environment variables to boolean for flags
         if isinstance(self.debug, str):
             self.debug = self.debug == "1"
-        if isinstance(self.classify_expertise, str):
-            self.classify_expertise = self.classify_expertise == "1"
 
 
 # Global settings instance

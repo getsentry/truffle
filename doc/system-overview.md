@@ -15,10 +15,10 @@ Identify who knows what inside Slack by:
 
 ## Environment flags and config
 - `SLACK_BOT_AUTH_TOKEN`: Slack token (required)
-- `OPENAI_API_KEY`: OpenAI API key (required if `CLASSIFY_EXPERTISE=1`)
+- `OPENAI_API_KEY`: OpenAI API key (required for expertise classification)
 - `CLASSIFIER_MODEL` (optional): defaults to `gpt-4o`
 
-- `CLASSIFY_EXPERTISE=1`: enable LLM-based expertise classification for matched skills
+
 
 ## Data flow (runtime)
 1. List public channels the bot is in and workspace users (filters bots/deleted).
@@ -27,7 +27,7 @@ Identify who knows what inside Slack by:
 4. Run `SkillMatcher.match_text(...)` on each message.
    - For thread parents, cache `{thread_ts -> {text, skills}}`.
    - For replies, inherit parent thread skills and keep `parent_text` for classification context.
-5. If `CLASSIFY_EXPERTISE=1`: call the classifier per message with any (inherited + direct) skills.
+5. Call the classifier per message with any (inherited + direct) skills.
 6. Print results to stdout.
 
 ## Taxonomy (high level)
@@ -69,7 +69,7 @@ Identify who knows what inside Slack by:
 ```bash
 export SLACK_BOT_AUTH_TOKEN=...        # required
 
-export CLASSIFY_EXPERTISE=1            # enable LLM classification
+
 export OPENAI_API_KEY=...              # required with classification
 cd truffle/ingestor
 ./run.sh

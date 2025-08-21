@@ -19,8 +19,8 @@ if [ -z "$SLACK_BOT_AUTH_TOKEN" ]; then
     exit 1
 fi
 
-if [ "$CLASSIFY_EXPERTISE" = "1" ] && [ -z "$OPENAI_API_KEY" ]; then
-    echo "Error: OPENAI_API_KEY environment variable is required when CLASSIFY_EXPERTISE=1"
+if [ -z "$OPENAI_API_KEY" ]; then
+    echo "Error: OPENAI_API_KEY environment variable is required for expertise classification"
     exit 1
 fi
 

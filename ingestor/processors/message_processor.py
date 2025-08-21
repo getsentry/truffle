@@ -3,7 +3,6 @@ import logging
 from datetime import date
 from typing import Any
 
-from config import settings
 from services.score_aggregation_service import get_aggregation_service
 from services.skill_service import SkillService
 from services.storage_service import StorageService
@@ -50,8 +49,8 @@ class MessageProcessor:
             message, matched_skills
         )
 
-        # 3. Classify expertise if enabled
-        if settings.classify_expertise and combined_skills:
+        # 3. Classify expertise
+        if combined_skills:
             await self._classify_and_store(
                 message, user_id, text, parent_text, combined_skills, channel
             )

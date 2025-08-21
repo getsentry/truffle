@@ -19,7 +19,7 @@ Configure the service by setting these environment variables:
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
 
-- `CLASSIFY_EXPERTISE` - Enable expertise classification (default: `false`)
+
 - `EXPERT_API_URL` - Expert API endpoint (default: `http://localhost:8002`)
 - `SLACK_BOT_URL` - Slack Bot endpoint (default: `http://localhost:8003`)
 - `INGESTOR_SENTRY_DSN` - Sentry DSN for error tracking
@@ -30,7 +30,7 @@ export TRUFFLE_DB_URL=postgresql://user:pass@postgres:5432/truffle
 export SLACK_BOT_AUTH_TOKEN=xoxb-your-token-here
 export OPENAI_API_KEY=sk-your-openai-key
 
-export CLASSIFY_EXPERTISE=true
+
 ```
 
 ---
