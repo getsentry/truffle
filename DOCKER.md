@@ -115,3 +115,64 @@ The Dockerfile uses:
 - **Slack Bot**: Can run multiple replicas behind a load balancer
 - **Expert API**: Stateless, scales horizontally
 - **Ingestor**: Single instance recommended (scheduled jobs), or use external job queue for scaling
+
+## How to Deploy Container to ghcr.io
+
+### 1. Build and Tag for GitHub Container Registry
+
+```bash
+# Build and tag the image
+docker build -t ghcr.io/ORGANIZATION/truffle:latest .
+
+# Example: docker build -t ghcr.io/getsentry/truffle:latest .
+```
+
+### 2. Authenticate with GitHub Container Registry
+
+Create a GitHub Personal Access Token with `write:packages` and `read:packages` scopes:
+
+```bash
+# Set your GitHub token (can be added to .envrc)
+export GITHUB_TOKEN=ghp_your_token_here
+
+# Login to ghcr.io
+echo $GITHUB_TOKEN | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+```
+
+### 3. Push the Image
+
+```bash
+docker push ghcr.io/ORGANIZATION/truffle:latest
+```
+
+### 4. Use Published Image in Docker Compose
+
+Update your `docker-compose.yml` to use the published image instead of building locally:
+
+```yaml
+services:
+  slack-bot:
+    image: ghcr.io/ORGANIZATION/truffle:latest
+    # Remove: build: .
+    environment:
+      - SERVICE_NAME=slack_bot
+      # ... other env vars
+```
+
+### 5. Make Repository Package Public (Optional)
+
+- Go to your GitHub repository → Packages → truffle
+- Change package visibility to public if needed
+- This allows others to pull without authentication
+
+### Automated Publishing
+
+For CI/CD, add this to your GitHub Actions workflow:
+
+```yaml
+- name: Build and push to ghcr.io
+  run: |
+    echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    docker build -t ghcr.io/${{ github.repository }}:latest .
+    docker push ghcr.io/${{ github.repository }}:latest
+```
