@@ -6,7 +6,7 @@ from datetime import datetime
 
 import sentry_sdk
 from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from slack_sdk.web.async_client import AsyncWebClient
 
 from config import settings
@@ -201,6 +201,113 @@ async def slack_events(payload: SlackEventsRequest):
             return SlackEventsResponse(ok=False, message="Error processing event")
 
     return SlackEventsResponse(ok=True, message="Event processed")
+
+
+@app.get("/slack/oauth")
+async def slack_oauth_callback(code: str | None = None, error: str | None = None):
+    """Handle Slack OAuth callback after app installation"""
+    if error:
+        return {"error": f"OAuth failed: {error}"}
+
+    if not code:
+        return {"error": "No authorization code provided"}
+
+    # Exchange authorization code for access token
+    import httpx
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://slack.com/api/oauth.v2.access",
+                data={
+                    "client_id": settings.slack_client_id,
+                    "client_secret": settings.slack_client_secret,
+                    "code": code,
+                },
+            )
+
+            result = response.json()
+
+            if result.get("ok"):
+                bot_token = result.get("access_token")
+                team_name = result.get("team", {}).get("name", "Unknown")
+
+                # Return HTML success page with token
+                html_content = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Truffle Bot Installed Successfully!</title>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            max-width: 600px;
+                            margin: 50px auto;
+                            padding: 20px;
+                        }}
+                        .success {{
+                            color: #2eb886;
+                            font-size: 24px;
+                            margin-bottom: 20px;
+                        }}
+                        .token {{
+                            background: #f5f5f5;
+                            padding: 15px;
+                            border-radius: 5px;
+                            font-family: monospace;
+                            word-break: break-all;
+                        }}
+                        .instructions {{
+                            background: #e8f4fd;
+                            padding: 15px;
+                            border-radius: 5px;
+                            margin: 20px 0;
+                        }}
+                        button {{
+                            background: #007cba;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            cursor: pointer;
+                            border-radius: 5px;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class="success">
+                        ✅ Truffle Bot installed successfully to {team_name}!
+                    </div>
+
+                    <h3>Your Bot Token:</h3>
+                    <div class="token" id="token">{bot_token}</div>
+                    <button onclick="copyToken()">Copy Token</button>
+
+                    <div class="instructions">
+                        <h3>Next Steps:</h3>
+                        <ol>
+                            <li>Copy the bot token above</li>
+                            <li>Set environment variable:
+                                <code>SLACK_BOT_AUTH_TOKEN={bot_token}</code></li>
+                            <li>Restart your Truffle bot service</li>
+                        </ol>
+                    </div>
+
+                    <script>
+                        function copyToken() {{
+                            navigator.clipboard.writeText('{bot_token}');
+                            alert('Token copied to clipboard!');
+                        }}
+                    </script>
+                </body>
+                </html>
+                """
+
+                return HTMLResponse(content=html_content)
+            else:
+                return {"error": f"OAuth exchange failed: {result.get('error')}"}
+
+    except Exception as e:
+        return {"error": f"Failed to exchange OAuth code: {str(e)}"}
 
 
 @app.get("/debug/stats")

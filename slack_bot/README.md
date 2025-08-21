@@ -11,6 +11,10 @@ Configure the service by setting these environment variables:
 ### Required
 - `SLACK_BOT_AUTH_TOKEN` - Slack Bot OAuth token (xoxb-...)
 
+### For Multi-Workspace Distribution (Optional)
+- `SLACK_CLIENT_ID` - Slack app client ID (for OAuth installations)
+- `SLACK_CLIENT_SECRET` - Slack app client secret (for OAuth installations)
+
 ### Optional
 - `DEBUG` - Enable debug mode (default: `false`)
 - `EXPERT_API_URL` - Expert API endpoint (default: `http://localhost:8002`)
@@ -24,7 +28,17 @@ Configure the service by setting these environment variables:
 export SLACK_BOT_AUTH_TOKEN=xoxb-your-token-here
 export SLACK_BOT_PORT=8003
 export EXPERT_API_URL=http://expert-api:8000
+
+# For multi-workspace distribution:
+export SLACK_CLIENT_ID=your-client-id
+export SLACK_CLIENT_SECRET=your-client-secret
 ```
+
+### Multi-Workspace Setup
+1. **Enable App Distribution** in your Slack app settings
+2. **Set redirect URL** to `https://your-domain.com/slack/oauth`
+3. **Configure OAuth credentials** using environment variables above
+4. **Share installation link** with other workspace admins
 
 ---
 Built by [Anton Pirker](https://github.com/antonpirker) during Sentry Hackweek 2025.
