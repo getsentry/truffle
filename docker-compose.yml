@@ -24,6 +24,7 @@ services:
     environment:
       - SERVICE_NAME=ingestor
       - INGESTOR_PORT=8000
+      - TRUFFLE_DB_URL=postgresql://truffle:truffle@postgres:5432/truffle
       # Pass from host environment
       - DEBUG
       - INGESTOR_HOST
@@ -31,11 +32,11 @@ services:
       - LOG_LEVEL
       - OPENAI_API_KEY
       - SLACK_BOT_AUTH_TOKEN
-      - TRUFFLE_DB_URL
     ports:
       - "3002:8000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   # Expert API Service
@@ -44,30 +45,40 @@ services:
     environment:
       - SERVICE_NAME=expert_api
       - EXPERT_API_PORT=8000
+      - TRUFFLE_DB_URL=postgresql://truffle:truffle@postgres:5432/truffle
       # Pass from host environment
       - DEBUG
       - EXPERT_API_HOST
       - EXPERT_API_SENTRY_DSN
       - LOG_LEVEL
-      - TRUFFLE_DB_URL
     ports:
       - "3003:8000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: truffle
-      POSTGRES_USER: truffle_user
-      POSTGRES_PASSWORD: truffle_password
+      - POSTGRES_DB=truffle
+      - POSTGRES_USER=truffle
+      - POSTGRES_PASSWORD=truffle
+      # Configure authentication method for network connections
+      - POSTGRES_HOST_AUTH_METHOD=md5
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./doc/setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql
+      # Mount initialization script
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5434:5432"
+      - "5439:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truffle -d truffle"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 volumes:
