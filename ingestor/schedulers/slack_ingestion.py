@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration constants
 FIRST_RUN_HOURS = 24 * 30  # 30 days for initial historical import
-PERIODIC_RUN_HOURS = 2 / 60  # 2 minutes for regular periodic runs
+PERIODIC_RUN_HOURS = 1
 
 
 @sentry_sdk.trace
@@ -111,7 +111,7 @@ async def _wait_for_processing_and_aggregate(queue_service):
     # Wait for queue to be empty (all messages processed)
     max_wait_minutes = 60  # Don't wait forever
     wait_cycles = 0
-    max_cycles = max_wait_minutes * 6  # Check every 10 seconds
+    max_cycles = max_wait_minutes * 6
 
     while wait_cycles < max_cycles:
         stats = await queue_service.get_queue_stats()

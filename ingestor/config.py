@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     sentry_dsn: str | None = Field(default=None, alias="INGESTOR_SENTRY_DSN")
 
     # Scheduling
-    ingestion_cron: str = "*/1 * * * *"
+    ingestion_cron: str = "59 * * * *"
 
     # Slack API rate limiting (seconds between requests)
     slack_api_delay: float = Field(default=1.2, alias="SLACK_API_DELAY")
