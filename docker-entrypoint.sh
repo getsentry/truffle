@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Truffle Multi-Service Docker Entrypoint
@@ -12,18 +12,21 @@ case "$SERVICE_NAME" in
   "slack_bot")
     echo "Launching Slack Bot service..."
     cd /app/slack_bot
+    export SLACK_BOT_PORT=${SLACK_BOT_PORT:-8000}
     exec python main.py
     ;;
 
   "ingestor")
     echo "Launching Ingestor service..."
     cd /app/ingestor
+    export INGESTOR_PORT=${INGESTOR_PORT:-8000}
     exec python main.py
     ;;
 
   "expert_api")
     echo "Launching Expert API service..."
     cd /app/expert_api
+    export EXPERT_API_PORT=${EXPERT_API_PORT:-8000}
     exec python main.py
     ;;
 

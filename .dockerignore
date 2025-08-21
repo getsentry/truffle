@@ -1,18 +1,10 @@
+# Truffle Docker Build Context Exclusions
+
 # Version control
 .git
 .gitignore
 
-# Documentation
-README.md
-doc/
-*.md
-
-# Development files
-.vscode/
-.idea/
-*.code-workspace
-
-# Python cache and builds
+# Python cache and build artifacts
 __pycache__/
 *.pyc
 *.pyo
@@ -35,31 +27,77 @@ wheels/
 *.egg
 
 # Virtual environments
+.venv/
 venv/
-env/
 ENV/
+env/
 
-# Lock files (we install from pyproject.toml)
-*/uv.lock
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Local development scripts
-*/run.sh
+# OS files
+Thumbs.db
 
-# Assets (not needed in runtime containers)
-assets/
+# Development and testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
 
-# Local database files
-*.db
-*.sqlite
+# Documentation
+docs/_build/
+*.md
+!README.md
+
+# Environment files (will be provided at runtime)
+.env
+.envrc
+
+# Development dependencies
+requirements-dev.txt
+
+# Lock files (we use consolidated requirements)
+uv.lock
+poetry.lock
+Pipfile.lock
 
 # Logs
 *.log
 
-# OS files
-.DS_Store
-Thumbs.db
+# Database
+*.db
+*.sqlite3
 
-# IDE files
-*.swp
-*.swo
-*~
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Assets (may be large)
+assets/
+*.jpg
+*.png
+*.gif
+*.svg
+
+# Docker files (avoid recursion)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+# Note: docker-entrypoint.sh is needed for container startup
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
