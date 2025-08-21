@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration constants
 FIRST_RUN_HOURS = 24 * 30  # 30 days for initial historical import
-PERIODIC_RUN_HOURS = 1  # 1 hour for regular periodic runs
+PERIODIC_RUN_HOURS = 2 / 60  # 2 minutes for regular periodic runs
 
 
 @sentry_sdk.trace
@@ -88,8 +88,8 @@ async def run_slack_ingestion():
         duration = (datetime.now(UTC) - start_time).total_seconds()
         queue_stats = await queue_service.get_queue_stats()
         logger.info(
-            f"Ingestion completed: {messages_enqueued} messages enqueued in {duration:.2f}s. "
-            f"Queue stats: {queue_stats}"
+            f"Ingestion completed: {messages_enqueued} messages enqueued "
+            f"in {duration:.2f}s. Queue stats: {queue_stats}"
         )
 
         # After first run, wait for workers to finish processing and aggregate scores

@@ -143,7 +143,7 @@ class SlackService:
     async def get_recent_messages(
         self,
         channel_id: str,
-        since_hours: int = 1,
+        since_hours: float = 1,
         page_size: int = 200,
         thread_page_size: int = 200,
     ) -> AsyncIterable[dict[str, Any]]:
