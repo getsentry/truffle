@@ -23,8 +23,6 @@ class SlackEventParser:
         self.url_pattern = re.compile(r"<https?://[^>]+>")
         self.formatting_pattern = re.compile(r"[*_~`]")
 
-        # Question indicators removed - we process all messages for skill extraction
-
     @sentry_sdk.trace
     def parse_event(self, event_data: dict[str, Any]) -> SlackEventContext | None:
         """Parse a Slack event and return context information"""
@@ -137,8 +135,6 @@ class SlackEventParser:
                 user_ids.append(user_id)
 
         return user_ids
-
-    # Question detection method removed - we now process all messages
 
     def should_process_message(self, parsed_message: ParsedSlackMessage) -> bool:
         """Determine if this message should be processed for expert search"""
