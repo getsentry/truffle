@@ -6,10 +6,11 @@ from pathlib import Path
 import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
 from apscheduler.triggers.cron import CronTrigger  # type: ignore
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 
 from config import settings
 from database import create_tables
+from database.operations import drop_tables
 from schedulers.slack_ingestion import run_slack_ingestion
 from scripts.import_taxonomy import import_taxonomy_files
 from services.queue_service import get_queue_service
@@ -206,7 +207,7 @@ async def get_aggregation_stats():
         return stats
     except Exception as e:
         logger.error(f"Failed to get aggregation stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/queue/clear")
@@ -217,7 +218,129 @@ async def clear_completed_tasks():
         return {"cleared_tasks": count, "status": "success"}
     except Exception as e:
         logger.error(f"Failed to clear completed tasks: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/database/reset")
+async def reset_database(import_skills: bool = True):
+    """Reset database by dropping and recreating all tables"""
+    try:
+        logger.info("Starting database reset via web API")
+
+        # Drop all tables
+        logger.info("Dropping all database tables...")
+        await drop_tables()
+        logger.info("All tables dropped")
+
+        # Create tables
+        logger.info("Creating database tables...")
+        await create_tables()
+        logger.info("Database tables created")
+
+        # Import skills if requested
+        if import_skills:
+            logger.info("Importing skills from JSON files...")
+            await auto_import_skills()
+            logger.info("Skills imported")
+
+        return {
+            "status": "success",
+            "message": "Database reset completed",
+            "skills_imported": import_skills,
+        }
+
+    except Exception as e:
+        logger.error(f"Database reset failed: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Database reset failed: {str(e)}"
+        ) from e
+
+
+async def _background_slack_import():
+    """Background task for Slack import"""
+    try:
+        logger.info("Starting background Slack import")
+        await run_slack_ingestion()
+        logger.info("Background Slack import completed successfully")
+    except Exception as e:
+        logger.error(f"Background Slack import failed: {e}", exc_info=True)
+
+
+@app.post("/slack/reimport")
+async def trigger_full_slack_import(background_tasks: BackgroundTasks):
+    """Trigger full historical Slack import (30 days)"""
+    try:
+        logger.info("Scheduling full Slack reimport via web API")
+
+        storage = StorageService()
+        is_empty = await storage.is_database_empty()
+
+        # Schedule the import as a background task
+        background_tasks.add_task(_background_slack_import)
+
+        return {
+            "status": "accepted",
+            "message": "Full Slack import scheduled and starting in background",
+            "was_empty_database": is_empty,
+            "note": (
+                "Import is running in background. "
+                "Check /queue/stats and /workers/stats for progress."
+            ),
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to schedule Slack reimport: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to schedule Slack reimport: {str(e)}"
+        ) from e
+
+
+async def _background_reset_and_import():
+    """Background task for database reset and Slack import"""
+    try:
+        logger.info("Starting background database reset and import")
+
+        # Reset database
+        logger.info("Resetting database...")
+        await drop_tables()
+        await create_tables()
+        await auto_import_skills()
+        logger.info("Database reset completed")
+
+        # Import Slack history
+        logger.info("Starting Slack import...")
+        await run_slack_ingestion()
+
+        logger.info("Background reset and import completed successfully")
+    except Exception as e:
+        logger.error(f"Background reset and import failed: {e}", exc_info=True)
+
+
+@app.post("/database/reset-and-reimport")
+async def reset_and_reimport_all(background_tasks: BackgroundTasks):
+    """Reset database and trigger full Slack history import"""
+    try:
+        logger.info("Scheduling full database reset and reimport via web API")
+
+        # Schedule the reset and import as a background task
+        background_tasks.add_task(_background_reset_and_import)
+
+        return {
+            "status": "accepted",
+            "message": (
+                "Database reset and Slack import scheduled and starting in background"
+            ),
+            "note": (
+                "Reset and import are running in background. "
+                "Check /queue/stats and /workers/stats for progress."
+            ),
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to schedule reset and reimport: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to schedule reset and reimport: {str(e)}"
+        ) from e
 
 
 if __name__ == "__main__":

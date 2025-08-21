@@ -4,6 +4,24 @@
 
 The Ingestor Service is the core data processing component of Truffle that automatically analyzes Slack conversations to identify user expertise. It periodically ingests messages from public Slack channels, extracts mentioned skills and technologies, classifies the level of expertise demonstrated in each message, and maintains aggregated skill scores for users. The service handles the complete pipeline from message collection to expertise evidence storage, enabling the system to build a comprehensive map of organizational knowledge and expertise.
 
+## Web Management API
+
+The Ingestor provides web endpoints for database and import management:
+
+### Database Operations
+- `POST /database/reset?import_skills=true` - Reset database (drop and recreate all tables) ⚡ Fast
+- `POST /database/reset-and-reimport` - Full reset + reimport all Slack history (30 days) 🔄 Background
+- `POST /slack/reimport` - Reimport full Slack history without database reset 🔄 Background
+
+**Note**: Long-running operations (reimport/reset-and-reimport) return immediately and run in background to prevent HTTP timeouts.
+
+### Monitoring & Status
+- `GET /` - Service status with queue statistics
+- `GET /health` - Health check with scheduler status
+- `GET /queue/stats` - Current message queue statistics
+- `GET /workers/stats` - Background worker status and performance
+- `POST /queue/clear` - Clear completed tasks from processing queue
+
 ## Configuration
 
 Configure the service by setting these environment variables:
