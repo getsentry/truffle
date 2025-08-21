@@ -28,7 +28,6 @@ class Settings(BaseSettings):
     slack_bot_auth_token: str = Field(default="", alias="SLACK_BOT_AUTH_TOKEN")
 
     # Service URLs
-    ingestor_url: str = Field(default="http://localhost:8001", alias="INGESTOR_URL")
     expert_api_url: str = Field(default="http://localhost:8002", alias="EXPERT_API_URL")
 
     model_config = {

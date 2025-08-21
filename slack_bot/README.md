@@ -17,7 +17,7 @@ Configure the service by setting these environment variables:
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
 - `EXPERT_API_URL` - Expert API endpoint (default: `http://localhost:8002`)
-- `INGESTOR_URL` - Ingestor service endpoint (default: `http://localhost:8001`)
+
 - `SLACK_BOT_SENTRY_DSN` - Sentry DSN for error tracking
 
 ### Example
