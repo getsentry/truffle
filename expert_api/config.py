@@ -31,8 +31,6 @@ class Settings(BaseSettings):
     # Sentry configuration
     sentry_dsn: str | None = Field(default=None, alias="EXPERT_API_SENTRY_DSN")
 
-
-
     model_config = {
         "env_file": ".envrc",
         "case_sensitive": False,

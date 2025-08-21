@@ -36,12 +36,6 @@ class Settings(BaseSettings):
     # Sentry configuration
     sentry_dsn: str | None = Field(default=None, alias="INGESTOR_SENTRY_DSN")
 
-    # Processing flags
-
-    # Service URLs
-    expert_api_url: str = Field(default="http://localhost:8002", alias="EXPERT_API_URL")
-    slack_bot_url: str = Field(default="http://localhost:8003", alias="SLACK_BOT_URL")
-
     # Scheduling
     ingestion_cron: str = "*/1 * * * *"
     model_config = {

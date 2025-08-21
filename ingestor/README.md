@@ -18,10 +18,6 @@ Configure the service by setting these environment variables:
 - `INGESTOR_PORT` - Server port (default: `8001`)
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `DEBUG` - Enable debug mode (default: `false`)
-
-
-- `EXPERT_API_URL` - Expert API endpoint (default: `http://localhost:8002`)
-- `SLACK_BOT_URL` - Slack Bot endpoint (default: `http://localhost:8003`)
 - `INGESTOR_SENTRY_DSN` - Sentry DSN for error tracking
 
 ### Example
