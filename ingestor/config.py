@@ -42,6 +42,10 @@ class Settings(BaseSettings):
 
     # Slack API rate limiting (seconds between requests)
     slack_api_delay: float = Field(default=1.2, alias="SLACK_API_DELAY")
+
+    # Batch-based rate limiting settings
+    slack_batch_size: int = Field(default=50, alias="SLACK_BATCH_SIZE")
+    slack_batch_wait_seconds: int = Field(default=61, alias="SLACK_BATCH_WAIT_SECONDS")
     model_config = {
         "env_file": ".envrc",
         "case_sensitive": False,

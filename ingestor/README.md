@@ -39,6 +39,8 @@ Configure the service by setting these environment variables:
 - `INGESTOR_SENTRY_DSN` - Sentry DSN for error tracking
 - `LOG_LEVEL` - Logging level (default: `INFO`)
 - `SLACK_API_DELAY` - Delay between Slack API calls in seconds (default: `1.2`)
+- `SLACK_BATCH_SIZE` - Number of API requests per batch (default: `50`)
+- `SLACK_BATCH_WAIT_SECONDS` - Seconds to wait between batches (default: `61`)
 
 ### Example
 ```bash

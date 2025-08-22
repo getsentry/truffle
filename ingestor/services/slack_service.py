@@ -18,14 +18,32 @@ class SlackService:
     def __init__(self):
         self.client = AsyncWebClient(token=settings.slack_bot_auth_token)
         self._bot_user_id: str | None = None
+        self._request_count = 0
+        self._batch_size = settings.slack_batch_size
+        self._batch_wait_seconds = settings.slack_batch_wait_seconds
 
-    async def _rate_limited_api_call(self, api_call, max_retries: int = 3):
-        """Make API call with exponential backoff on rate limiting"""
+    async def _batch_rate_limited_api_call(self, api_call, max_retries: int = 3):
+        """Make API call with batch-based rate limiting (50 requests per minute)"""
+        # Check if we need to wait for next batch
+        if self._request_count >= self._batch_size:
+            logger.info(
+                f"Reached batch limit ({self._batch_size} requests), "
+                f"waiting {self._batch_wait_seconds} seconds for next batch..."
+            )
+            await asyncio.sleep(self._batch_wait_seconds)
+            self._request_count = 0
+            logger.info("Starting new batch of requests")
+
         for attempt in range(max_retries):
             try:
-                # Always add base delay before API calls
-                await asyncio.sleep(settings.slack_api_delay)
-                return await api_call()
+                # Small delay between individual requests in batch
+                await asyncio.sleep(0.1)
+                result = await api_call()
+                self._request_count += 1
+                logger.debug(
+                    f"API request {self._request_count}/{self._batch_size} in current batch"
+                )
+                return result
             except SlackApiError as e:
                 if e.response["error"] == "ratelimited" and attempt < max_retries - 1:
                     # Get retry-after header if available, else use exponential backoff
@@ -34,7 +52,7 @@ class SlackService:
                         delay = float(retry_after) + 1  # Add 1 second buffer
                     else:
                         # Exponential backoff
-                        delay = (2**attempt) * settings.slack_api_delay
+                        delay = (2**attempt) * 2
 
                     logger.warning(
                         f"Rate limited by Slack API "
@@ -56,7 +74,7 @@ class SlackService:
         cursor = None
 
         while True:
-            resp = await self._rate_limited_api_call(
+            resp = await self._batch_rate_limited_api_call(
                 lambda c=cursor: self.client.users_conversations(
                     types="public_channel",
                     exclude_archived=exclude_archived,
@@ -84,7 +102,7 @@ class SlackService:
         cursor = None
 
         while True:
-            resp = await self._rate_limited_api_call(
+            resp = await self._batch_rate_limited_api_call(
                 lambda c=cursor: self.client.users_list(limit=1000, cursor=c)
             )
             resp_data = cast(dict[str, Any], resp.data)
@@ -112,6 +130,7 @@ class SlackService:
     async def get_bot_user_id(self) -> str:
         """Get the bot's user ID using auth.test API"""
         if self._bot_user_id is None:
+            # auth_test doesn't count against rate limits, so use direct call
             resp = await self.client.auth_test()
             resp_data = cast(dict[str, Any], resp.data)
             self._bot_user_id = resp_data.get("user_id")
@@ -155,7 +174,7 @@ class SlackService:
         cursor = None
 
         while True:
-            resp = await self._rate_limited_api_call(
+            resp = await self._batch_rate_limited_api_call(
                 lambda c=cursor: self.client.conversations_history(
                     channel=channel_id,
                     oldest=oldest,
@@ -185,7 +204,7 @@ class SlackService:
                     thread_cursor = None
 
                     while True:
-                        thread_response = await self._rate_limited_api_call(
+                        thread_response = await self._batch_rate_limited_api_call(
                             lambda ts=parent_ts, tc=thread_cursor: (
                                 self.client.conversations_replies(
                                     channel=channel_id,
@@ -237,6 +256,11 @@ class SlackService:
         # Check for @mention of bot using <@USER_ID> format
         mention_pattern = f"<@{bot_user_id}(?:\\|[^>]+)?>"
         return bool(re.search(mention_pattern, text))
+
+    def reset_batch_counter(self):
+        """Reset the batch counter - useful for starting fresh batches per channel or operation"""
+        self._request_count = 0
+        logger.debug("Reset API request batch counter")
 
     def replace_user_mentions(self, text: str, users: dict[str, dict[str, Any]]) -> str:
         """Replace Slack user mentions with readable format"""
