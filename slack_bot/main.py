@@ -172,7 +172,7 @@ async def slack_events(payload: SlackEventsRequest):
                         return SlackEventsResponse(ok=True, message=response_message)
                     else:
                         skills_text = ", ".join(expert_query.skills)
-                        no_experts_message = f"No experts found for {skills_text}"
+                        no_experts_message = f"No experts found for {skills_text} 🙈"
 
                         await send_slack_reply(payload.model_dump(), no_experts_message)
 
