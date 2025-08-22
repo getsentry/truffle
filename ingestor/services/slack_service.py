@@ -46,18 +46,13 @@ class SlackService:
                 return result
             except SlackApiError as e:
                 if e.response["error"] == "ratelimited" and attempt < max_retries - 1:
-                    # Get retry-after header if available, else use exponential backoff
-                    retry_after = e.response.get("headers", {}).get("Retry-After")
-                    if retry_after:
-                        delay = float(retry_after) + 1  # Add 1 second buffer
-                    else:
-                        # Exponential backoff
-                        delay = (2**attempt) * 2
+                    # Always wait configured seconds for 429 errors
+                    delay = settings.slack_rate_limit_delay_seconds
 
                     logger.warning(
                         f"Rate limited by Slack API "
                         f"(attempt {attempt + 1}/{max_retries}), "
-                        f"waiting {delay:.1f} seconds..."
+                        f"waiting {delay} seconds..."
                     )
                     await asyncio.sleep(delay)
                 else:

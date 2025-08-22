@@ -41,6 +41,8 @@ Configure the service by setting these environment variables:
 - `SLACK_API_DELAY` - Delay between Slack API calls in seconds (default: `1.2`)
 - `SLACK_BATCH_SIZE` - Number of API requests per batch (default: `50`)
 - `SLACK_BATCH_WAIT_SECONDS` - Seconds to wait between batches (default: `61`)
+- `SLACK_CHANNEL_DELAY_SECONDS` - Seconds to wait between channels (default: `61`)
+- `SLACK_RATE_LIMIT_DELAY_SECONDS` - Seconds to wait after 429 errors (default: `61`)
 
 ### Example
 ```bash

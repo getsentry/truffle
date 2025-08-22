@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 import sentry_sdk
 
+from config import settings
 from services.queue_service import get_queue_service
 from services.score_aggregation_service import get_aggregation_service
 from services.slack_service import SlackService
@@ -50,8 +51,16 @@ async def run_slack_ingestion():
         messages_enqueued = 0
 
         # Enqueue messages from each channel for background processing
-        for channel in channels:
+        for i, channel in enumerate(channels):
             logger.info(f"Enqueuing messages from channel: {channel['name']}")
+
+            # Add delay between channels (except for first channel)
+            if i > 0:
+                delay = settings.slack_channel_delay_seconds
+                logger.info(
+                    f"Waiting {delay} seconds before processing next channel..."
+                )
+                await asyncio.sleep(delay)
 
             # Reset batch counter for each channel to start fresh
             slack_service.reset_batch_counter()

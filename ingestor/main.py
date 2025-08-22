@@ -412,6 +412,14 @@ async def _background_channel_import(
         # Reset batch counter for this channel
         slack_service.reset_batch_counter()
 
+        # Add initial delay to respect rate limits when triggered by bot join
+        delay = settings.slack_channel_delay_seconds
+        logger.info(
+            f"Waiting {delay} seconds before starting channel import "
+            f"to respect rate limits..."
+        )
+        await asyncio.sleep(delay)
+
         logger.info(
             f"Importing messages from #{channel_name} (last {import_history_days} days)"
         )
