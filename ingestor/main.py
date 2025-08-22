@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -7,6 +8,7 @@ import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
 from apscheduler.triggers.cron import CronTrigger  # type: ignore
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel
 
 from config import settings
 from database import create_tables
@@ -15,6 +17,7 @@ from schedulers.slack_ingestion import run_slack_ingestion
 from scripts.import_taxonomy import import_taxonomy_files
 from services.queue_service import get_queue_service
 from services.score_aggregation_service import get_aggregation_service
+from services.slack_service import SlackService
 from services.storage_service import StorageService
 from workers import get_worker_manager
 
@@ -347,6 +350,106 @@ async def reset_and_reimport_all(background_tasks: BackgroundTasks):
         raise HTTPException(
             status_code=500, detail=f"Failed to schedule reset and reimport: {str(e)}"
         ) from e
+
+
+class ChannelImportRequest(BaseModel):
+    channel_id: str
+    channel_name: str
+    import_history_days: int = 30
+
+
+@app.post("/import/channel")
+async def import_single_channel(
+    request: ChannelImportRequest, background_tasks: BackgroundTasks
+):
+    """Import messages from a specific channel (triggered when bot is added)"""
+    try:
+        logger.info(
+            f"Received import request for channel "
+            f"#{request.channel_name} ({request.channel_id})"
+        )
+
+        # Schedule the import as a background task
+        background_tasks.add_task(
+            _background_channel_import,
+            request.channel_id,
+            request.channel_name,
+            request.import_history_days,
+        )
+
+        return {
+            "status": "accepted",
+            "message": f"Channel import for #{request.channel_name} scheduled",
+            "channel_id": request.channel_id,
+            "import_history_days": request.import_history_days,
+            "note": "Import is running in background. Check logs for progress.",
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to schedule channel import: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to schedule channel import: {str(e)}"
+        ) from e
+
+
+async def _background_channel_import(
+    channel_id: str, channel_name: str, import_history_days: int
+):
+    """Background task for importing a specific channel"""
+    try:
+        logger.info(f"Starting background import for channel #{channel_name}")
+
+        slack_service = SlackService()
+        storage = StorageService()
+        queue_service = get_queue_service()
+
+        # Get workspace users (needed for message processing)
+        users = await slack_service.get_workspace_users()
+        await storage.upsert_users(users)
+
+        messages_enqueued = 0
+
+        # Reset batch counter for this channel
+        slack_service.reset_batch_counter()
+
+        logger.info(
+            f"Importing messages from #{channel_name} (last {import_history_days} days)"
+        )
+
+        # Get messages from the channel
+        async for message in slack_service.get_recent_messages(
+            channel_id,
+            since_hours=import_history_days * 24,  # Convert days to hours
+        ):
+            # Replace user mentions for better text processing
+            if message.get("text"):
+                message["text"] = slack_service.replace_user_mentions(
+                    message["text"], users
+                )
+
+            # Create channel info for the queue
+            channel_info = {"id": channel_id, "name": channel_name}
+
+            # Enqueue message for background processing
+            await queue_service.enqueue_message(message, channel_info, users)
+            messages_enqueued += 1
+
+            # Progress logging
+            if messages_enqueued % 50 == 0:
+                logger.info(
+                    f"Enqueued {messages_enqueued} messages from #{channel_name}..."
+                )
+                await asyncio.sleep(0.5)  # Brief pause
+
+        logger.info(
+            f"✅ Channel import completed for #{channel_name}: "
+            f"{messages_enqueued} messages enqueued"
+        )
+
+    except Exception as e:
+        logger.error(
+            f"Background channel import failed for #{channel_name}: {e}", exc_info=True
+        )
 
 
 if __name__ == "__main__":

@@ -1,9 +1,11 @@
 """Slack Bot Service - Expert search integration for Slack"""
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import httpx
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, PlainTextResponse
@@ -482,15 +484,54 @@ async def handle_bot_added_to_channel(event_data: dict):
             "• `@Truffle who knows Python?`\n"
             "• `@Truffle find an expert in React`\n"
             "• `@Truffle who can help with Docker?`\n\n"
-            "I'll search through our team's message history to find the best experts to help you! 🔍"
+            "I'll search through our team's message history to find the best "
+            "experts to help you! 🔍"
         )
 
         await slack_client.chat_postMessage(channel=channel_id, text=welcome_message)
 
         logger.info(f"Sent welcome message to #{channel_name}")
 
+        # Trigger background import of channel messages
+        await trigger_channel_import(channel_id, channel_name)
+
     except Exception as e:
         logger.error(f"Error handling bot added to channel: {e}", exc_info=True)
+
+
+async def trigger_channel_import(channel_id: str, channel_name: str):
+    """Trigger a full message import for a newly added channel"""
+    try:
+        logger.info(f"🔄 Starting background import for channel #{channel_name}")
+
+        # Call the ingestor API to trigger import for this specific channel
+        ingestor_url = "http://localhost:8001"  # Default ingestor URL
+
+        # Try to get ingestor URL from environment or config
+        ingestor_url = os.environ.get("INGESTOR_URL", ingestor_url)
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{ingestor_url}/import/channel",
+                json={
+                    "channel_id": channel_id,
+                    "channel_name": channel_name,
+                    "import_history_days": 30,  # Import last 30 days
+                },
+            )
+
+            if response.status_code == 200:
+                logger.info(f"✅ Successfully triggered import for #{channel_name}")
+            else:
+                logger.error(
+                    f"❌ Failed to trigger import for #{channel_name}: "
+                    f"{response.status_code} - {response.text}"
+                )
+
+    except Exception as e:
+        logger.error(
+            f"Error triggering channel import for #{channel_name}: {e}", exc_info=True
+        )
 
 
 def format_expert_mention(expert) -> str:
