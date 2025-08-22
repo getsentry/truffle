@@ -64,8 +64,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize skill cache: {e}")
 
-    # Initialize Event Processor with skill cache
-    event_processor = EventProcessor(skill_cache_service, bot_user_id=None)
+    # Get bot user ID and initialize Event Processor with skill cache
+    bot_user_id = None
+    if slack_client:
+        try:
+            auth_response = await slack_client.auth_test()
+            bot_user_id = auth_response.get("user_id")
+            logger.info(f"Bot user ID: {bot_user_id}")
+        except Exception as e:
+            logger.error(f"Failed to get bot user ID: {e}")
+
+    event_processor = EventProcessor(skill_cache_service, bot_user_id=bot_user_id)
 
     logger.info("All services initialized successfully")
 
@@ -105,7 +114,7 @@ def health() -> HealthResponse:
 
 @app.post("/slack/events", response_model=SlackEventsResponse)
 async def slack_events(payload: SlackEventsRequest):
-    """Handle Slack events (app_mention, message.im)"""
+    """Handle Slack events (app_mention, message.im, member_joined_channel)"""
     logger.info(f"Received Slack event: {payload.type}")
 
     # Handle Slack URL verification challenge
@@ -119,10 +128,18 @@ async def slack_events(payload: SlackEventsRequest):
             return SlackEventsResponse(ok=False, message="Service not initialized")
 
         try:
+            event_data = payload.model_dump()
+            event_type = event_data.get("event", {}).get("type")
+
+            # Handle bot added to channel event
+            if event_type == "member_joined_channel":
+                await handle_bot_added_to_channel(event_data)
+                return SlackEventsResponse(
+                    ok=True, message="Bot channel join processed"
+                )
+
             # Process the event and extract expert query
-            expert_query = await event_processor.process_slack_event(
-                payload.model_dump()
-            )
+            expert_query = await event_processor.process_slack_event(event_data)
 
             if expert_query:
                 logger.info(
@@ -421,6 +438,59 @@ def format_expert_response(skills: list[str], experts: list) -> str:
             + "\n".join(top_experts)
             + f"\n... and {remaining} more expert{'s' if remaining != 1 else ''}"
         )
+
+
+async def handle_bot_added_to_channel(event_data: dict):
+    """Handle when the bot is added to a new channel"""
+    if not slack_client:
+        logger.error("Slack client not initialized")
+        return
+
+    event = event_data.get("event", {})
+    user_id = event.get("user")
+    channel_id = event.get("channel")
+
+    # Check if it's our bot that was added
+    if not event_processor or not user_id:
+        return
+
+    # Get bot user ID from slack client
+    try:
+        auth_response = await slack_client.auth_test()
+        bot_user_id = auth_response.get("user_id")
+    except Exception as e:
+        logger.error(f"Failed to get bot user ID: {e}")
+        return
+
+    if user_id != bot_user_id:
+        return  # Not our bot
+
+    try:
+        # Get channel info
+        channel_response = await slack_client.conversations_info(channel=channel_id)
+        if not channel_response["ok"]:
+            logger.error(f"Failed to get channel info: {channel_response.get('error')}")
+            return
+
+        channel_name = channel_response["channel"]["name"]
+        logger.info(f"🎉 Bot added to channel: #{channel_name} ({channel_id})")
+
+        # Send a welcome message
+        welcome_message = (
+            "👋 Hello! I'm Truffle, your expert finder bot!\n\n"
+            "I can help you find team members with specific skills. Try asking:\n"
+            "• `@Truffle who knows Python?`\n"
+            "• `@Truffle find an expert in React`\n"
+            "• `@Truffle who can help with Docker?`\n\n"
+            "I'll search through our team's message history to find the best experts to help you! 🔍"
+        )
+
+        await slack_client.chat_postMessage(channel=channel_id, text=welcome_message)
+
+        logger.info(f"Sent welcome message to #{channel_name}")
+
+    except Exception as e:
+        logger.error(f"Error handling bot added to channel: {e}", exc_info=True)
 
 
 def format_expert_mention(expert) -> str:

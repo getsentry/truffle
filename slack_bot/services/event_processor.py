@@ -23,6 +23,7 @@ class EventProcessor:
     ):
         self.slack_parser = SlackEventParser(bot_user_id=bot_user_id)
         self.query_parser = QueryParser(skill_cache_service)
+        self.bot_user_id = bot_user_id
 
     @sentry_sdk.trace
     async def process_slack_event(
